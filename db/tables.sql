@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS materials (
 	name varchar(32)
 );
 
--- «Объект недвижимости» - objects
+-- «Объекты недвижимости» - objects
 DROP TABLE IF EXISTS objects CASCADE;
 CREATE TABLE IF NOT EXISTS objects (
 	id SERIAL PRIMARY KEY,
