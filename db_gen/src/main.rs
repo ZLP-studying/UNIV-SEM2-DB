@@ -51,7 +51,7 @@ fn main() {
     // Random seed
     let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
     // Gen loop
-    for _ in 0..iterations {
+    for i in 0..iterations {
         // District id
         let district = rng.gen_range(1..=DISTRICTS_NR);
 
@@ -105,7 +105,7 @@ fn main() {
             + &(rng.gen_range(10..=22) + 2000).to_string()
             + "\"";
 
-        let result = &("(".to_owned()
+        let result = &mut ("(".to_owned()
             + &district.to_string() // District id
             + ", "
             + &address // Address
@@ -128,6 +128,9 @@ fn main() {
             + ", "
             + &date // Date
             + ")");
+        if i != iterations - 1 {
+            result.push(',');
+        }
         println!("{}", result);
     }
 }
