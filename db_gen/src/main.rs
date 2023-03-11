@@ -57,11 +57,11 @@ fn main() {
 
         // Address
         let address = String::from(
-            "\"".to_owned()
+            "'".to_owned()
                 + ADDRESSES[district - 1][rng.gen_range(1..4)]
                 + ", "
                 + &rng.gen_range(1..=16).to_string()
-                + "\"",
+                + "'"
         );
 
         // Rooms count
@@ -87,23 +87,23 @@ fn main() {
             + (rng.gen_range(1..=100) * 1000) as f32) as u32;
 
         // Description
-        let description = "\"".to_owned()
+        let description = "'".to_owned()
             + &description1[rng.gen_range(0..description1.len())].to_string()
             + " "
             + &description2[rng.gen_range(0..description2.len())].to_string()
-            + "\"";
+            + "'";
 
         // Material
         let material = rng.gen_range(1..=MATERIAL_NR);
 
         // Date
-        let date = "\"".to_owned()
+        let date = "'".to_owned()
             + &rng.gen_range(1..=28).to_string()
             + "."
             + &rng.gen_range(1..=12).to_string()
             + "."
             + &(rng.gen_range(10..=22) + 2000).to_string()
-            + "\"";
+            + "'";
 
         let result = &mut ("(".to_owned()
             + &district.to_string() // District id
@@ -130,6 +130,8 @@ fn main() {
             + ")");
         if i != iterations - 1 {
             result.push(',');
+        } else {
+            result.push(';');
         }
         println!("{}", result);
     }
