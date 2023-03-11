@@ -1,0 +1,77 @@
+---------------------
+-- Создание таблиц --
+---------------------
+-- «Тип» - types
+DROP TABLE IF EXISTS types CASCADE;
+CREATE TABLE IF NOT EXISTS types (
+	id SERIAL PRIMARY KEY,
+	name varchar(32)
+);
+
+-- «Районы» - districts
+DROP TABLE IF EXISTS districts CASCADE;
+CREATE TABLE IF NOT EXISTS districts (
+	id SERIAL PRIMARY KEY,
+	name varchar(32)
+);
+
+-- «Материалы зданий» - materials
+DROP TABLE IF EXISTS materials CASCADE;
+CREATE TABLE IF NOT EXISTS materials (
+	id SERIAL PRIMARY KEY,
+	name varchar(32)
+);
+
+-- «Объект недвижимости» - objects
+DROP TABLE IF EXISTS objects CASCADE;
+CREATE TABLE IF NOT EXISTS objects (
+	id SERIAL PRIMARY KEY,
+	district_id bigint references districts(id),
+	address varchar(32),
+	floor bigint,
+	rooms bigint,
+	type_id bigint references types(id),
+	status boolean,
+	cost double precision,
+	description text,
+	material_id bigint references materials(id),
+	square double precision,
+	date date
+);
+
+-- «Критерии оценки» - parameters
+DROP TABLE IF EXISTS parameters CASCADE;
+CREATE TABLE IF NOT EXISTS parameters (
+	id SERIAL PRIMARY KEY,
+	name varchar(32)
+);
+
+-- «Оценки» - rates
+DROP TABLE IF EXISTS rates CASCADE;
+CREATE TABLE IF NOT EXISTS rates (
+	id SERIAL PRIMARY KEY,
+	object_id bigint references objects(id),
+	date date,
+  parameter_id bigint references parameters(id),
+	rate double precision
+);
+
+-- «Риэлторы» - realtors
+DROP TABLE IF EXISTS realtors CASCADE;
+CREATE TABLE IF NOT EXISTS realtors (
+	id SERIAL PRIMARY KEY,
+	s_name varchar(32),
+	f_name varchar(32),
+	t_name varchar(32),
+	contacts varchar(16)
+);
+
+-- «Продажи» - sales
+DROP TABLE IF EXISTS sales CASCADE;
+CREATE TABLE IF NOT EXISTS sales (
+	id SERIAL PRIMARY KEY,
+	object_id bigint references objects(id),
+	date date,
+	realtor_id bigint references realtors(id),
+	cost double precision
+);
