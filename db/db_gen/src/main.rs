@@ -25,7 +25,7 @@ INSERT INTO materials (name) VALUES
 
 -- «Объект недвижимости» - objects
 INSERT INTO objects
-(district_id, address, floor, rooms_count, type_id, status, cost, object_desc, material_id, square, date)
+(district_id, address, floor, rooms, type_id, status, cost, description, material_id, square, date)
 VALUES
 --- ... ---
 
@@ -39,12 +39,12 @@ INSERT INTO parameters (name) VALUES
 ('Безопасность');
 
 -- «Оценки» - rates
-INSERT INTO rates (object_id, date, parameter_id, score) VALUES
+INSERT INTO rates (object_id, date, parameter_id, rate) VALUES
 --- ... ---
 
 -- «Риэлторы» - realtors
 INSERT INTO realtors
-(s_name, f_name, t_name, phone_num) VALUES
+(s_name, f_name, t_name, contacts) VALUES
 ('Иванов', 'Иван', 'Петрович', '89608521245'),
 ('Кузнецов', 'Антон', 'Васильевич', '12234567899'),
 ('Продолговатый', 'Петр', 'Лисов', '98765432101'),
@@ -200,7 +200,7 @@ fn gen_materials() {
 fn gen_objects(iterations: u32) {
     println!("-- «Объекты недвижимости» - objects");
     println!("INSERT INTO objects");
-    println!("(district_id, address, floor, rooms_count, type_id, status, cost, object_desc, material_id, square, date)");
+    println!("(district_id, address, floor, rooms, type_id, status, cost, description, material_id, square, date)");
     println!("VALUES");
 
     // First part of description
@@ -321,7 +321,7 @@ fn gen_parameters() {
 fn gen_rates(objects_nr: u32) {
     println!("-- «Оценки» - rates");
     println!("INSERT INTO rates");
-    println!("(object_id, date, parameter_id, score)");
+    println!("(object_id, date, parameter_id, rate)");
     println!("VALUES");
 
     // Random seed
@@ -345,7 +345,7 @@ fn gen_rates(objects_nr: u32) {
             + ", "
             + &rng.gen_range(1..=PARAM_NAMES.len()).to_string() // Parameter id
             + ", "
-            + &rng.gen_range(0..=10).to_string() // Score
+            + &rng.gen_range(0..=10).to_string() // Rate
             + ")");
         if i != iterations - 1 {
             result.push(',');
@@ -359,7 +359,7 @@ fn gen_rates(objects_nr: u32) {
 fn gen_realtors() {
     println!("-- «Риэлторы» - realtors");
     println!("INSERT INTO realtors");
-    println!("(s_name, f_name, t_name, phone_num)");
+    println!("(s_name, f_name, t_name, contacts)");
     println!("VALUES");
     for i in 0..(REALTORS.len()) {
         let result = &mut ("(".to_owned()
@@ -369,7 +369,7 @@ fn gen_realtors() {
             + ", "
             + &("'".to_owned() + REALTORS[i].2 + "'").to_string() // Last name
             + ", "
-            + &("'".to_owned() + REALTORS[i].3 + "'").to_string() // Phone num
+            + &("'".to_owned() + REALTORS[i].3 + "'").to_string() // Contacts
             + ")");
         if i != REALTORS.len() - 1 {
             result.push(',');
