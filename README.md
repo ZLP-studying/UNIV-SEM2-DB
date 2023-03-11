@@ -3,6 +3,6 @@
 > UNIX, Linux
 
 ```
-cd ./db_gen
+cd ./db/db_gen
 cargo r --release
 ```
