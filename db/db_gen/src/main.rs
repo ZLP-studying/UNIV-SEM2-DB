@@ -170,7 +170,11 @@ fn gen_objects(iterations: u32) {
             "'".to_owned()
                 + ADDRESSES[district - 1][rng.gen_range(1..4)]
                 + ", "
+                + "дом "
                 + &rng.gen_range(1..=16).to_string()
+                + ", "
+                + "кв "
+                + &rng.gen_range(1..=25).to_string()
                 + "'",
         );
 
