@@ -27,7 +27,7 @@ DROP TABLE IF EXISTS objects CASCADE;
 CREATE TABLE IF NOT EXISTS objects (
 	id SERIAL PRIMARY KEY,
 	district_id bigint references districts(id),
-	address varchar(32),
+	address varchar(64),
 	floor bigint,
 	rooms bigint,
 	type_id bigint references types(id),
