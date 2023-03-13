@@ -280,7 +280,7 @@ fn gen_rates(objects_nr: u32) {
             + "'";
 
         let result = &mut ("(".to_owned()
-            + &&rng.gen_range(1..=objects_nr).to_string() // Object id
+            + &rng.gen_range(1..=objects_nr).to_string() // Object id
             + ", "
             + &date // Date
             + ", "
@@ -347,7 +347,7 @@ fn gen_sales(objects_nr: u32) {
             + ", "
             + &rng.gen_range(1..=REALTORS.len()).to_string() // Realtor id
             + ", "
-            + &(rng.gen_range(4000..50000) * 1000).to_string()*1000).to_:;string() // Cost
+            + &(rng.gen_range(4000..50000) * 1000).to_string() // Cost
             + ")");
         if i != iterations - 1 {
             result.push(',');
