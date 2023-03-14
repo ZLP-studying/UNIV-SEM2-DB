@@ -16,12 +16,12 @@ cargo r --release
 
 ```
 rustup target add x86_64-pc-windows-gnu
-cargo build --target x86_64-pc-windows-gnu --release
+cargo r --target x86_64-pc-windows-gnu --release
 ```
 
 - Windows x32
 
 ```
 rustup target add i686-pc-windows-gnu
-cargo build --target i686-pc-windows-gnu --release
+cargo r --target i686-pc-windows-gnu --release
 ```
