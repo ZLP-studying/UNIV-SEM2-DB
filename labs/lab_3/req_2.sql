@@ -131,7 +131,54 @@ year;
 -- проданных квартир больше 5
 -------------------------------------------------
 
---- 20 ------------------------------------------
--- Вывести название районов, в которых количество
--- проданных квартир больше 5
+--- 18 ------------------------------------------
+--
+--
 -------------------------------------------------
+WITH "2021" AS (
+  SELECT
+  district_id, COUNT(*)
+	FROM (
+    (
+      SELECT object_id
+      FROM sales
+      WHERE EXTRACT(year FROM sales.date) = 2021
+    ) as "a"
+    JOIN
+    (
+      SELECT
+      objects.id, objects.district_id
+      FROM objects
+    ) AS "b"
+    ON "a".object_id = "b".id
+  )
+  GROUP BY district_id
+),
+"2022" AS (
+  SELECT district_id, count(*)
+  FROM (
+    (
+      SELECT object_id
+      FROM sales
+      WHERE EXTRACT(year FROM sales.date) = 2022
+    ) AS "a"
+    JOIN
+    (
+      SELECT
+      objects.id, objects.district_id
+      FROM objects
+    ) as "b"
+    ON "a".object_id = "b".id
+  )
+  GROUP BY district_id
+)
+
+SELECT
+districts.name, "2021".count, "2022".count,
+round((("2022".count - "2021".count) / "2022".count::decimal) * 100) AS delta
+FROM
+"2021", "2022", districts
+WHERE
+districts.id = "2021".district_id
+AND
+districts.id = "2022".district_id;
