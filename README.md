@@ -32,3 +32,15 @@ cargo r --target i686-pc-windows-gnu --release
 cd ".\db\db_gen\"
 cargo r --release
 ```
+
+## Distribution of tasks
+
+> Task % 5 = student_id
+
+Student_id - Student
+
+- 0 - Oleg
+- 1 - Alexey
+- 2 - Eugene
+- 3 - Matvey
+- 4 - Daniil
