@@ -1,27 +1,34 @@
 ## DB generation
 
-> UNIX, Linux
+> In UNIX, Linux
 
 ```
 cd ./db/db_gen
 ```
 
-- Linux
+- For Linux
 
 ```
 cargo r --release
 ```
 
-- Windows x64
+- For Windows x64
 
 ```
 rustup target add x86_64-pc-windows-gnu
 cargo r --target x86_64-pc-windows-gnu --release
 ```
 
-- Windows x32
+- For Windows x32
 
 ```
 rustup target add i686-pc-windows-gnu
 cargo r --target i686-pc-windows-gnu --release
+```
+
+> In Windows pwsh
+
+```
+cd ".\db\db_gen\"
+cargo r --release
 ```
