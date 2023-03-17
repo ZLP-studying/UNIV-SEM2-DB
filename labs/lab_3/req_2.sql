@@ -2,7 +2,6 @@
 -- Вывести адреса объектов недвижимости, у которых стоимость
 -- 1 м2 меньше средней стоимости по району
 ------------------------------------------------------------
----
 
 --- 2 -------------------------------------------
 -- Вывести название районов, в которых количество
@@ -74,7 +73,6 @@ year;
 -- Определить адреса квартир, стоимость 1м2
 -- которых меньше средней по району
 -------------------------------------------
----
 
 --- 7 ------------------------------
 -- Определить ФИО риэлторов, которые
@@ -141,3 +139,50 @@ year;
 -- Вывести информацию о количество продаж в предыдущем и текущем
 -- годах по каждому району, а также процент изменения
 ----------------------------------------------------------------
+WITH "2021" AS (
+  SELECT
+  district_id, COUNT(*)
+	FROM (
+    (
+      SELECT object_id
+      FROM sales
+      WHERE EXTRACT(year FROM sales.date) = 2021
+    ) as "a"
+    JOIN
+    (
+      SELECT
+      objects.id, objects.district_id
+      FROM objects
+    ) AS "b"
+    ON "a".object_id = "b".id
+  )
+  GROUP BY district_id
+),
+"2022" AS (
+  SELECT district_id, count(*)
+  FROM (
+    (
+      SELECT object_id
+      FROM sales
+      WHERE EXTRACT(year FROM sales.date) = 2022
+    ) AS "a"
+    JOIN
+    (
+      SELECT
+      objects.id, objects.district_id
+      FROM objects
+    ) as "b"
+    ON "a".object_id = "b".id
+  )
+  GROUP BY district_id
+)
+
+SELECT
+districts.name, "2021".count, "2022".count,
+round((("2022".count - "2021".count) / "2022".count::decimal) * 100) AS delta
+FROM
+"2021", "2022", districts
+WHERE
+districts.id = "2021".district_id
+AND
+districts.id = "2022".district_id;
