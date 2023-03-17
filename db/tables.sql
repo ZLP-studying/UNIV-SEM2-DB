@@ -75,3 +75,11 @@ CREATE TABLE IF NOT EXISTS sales (
 	realtor_id bigint references realtors(id),
 	cost double precision
 );
+
+-- «Структуры квартир» - structures
+DROP TABLE IF EXISTS structures CASCADE;
+CREATE TABLE IF NOT EXISTS structures (
+	object_id bigint references objects(id),
+	room_type_id bigint,
+	square double precision
+);
