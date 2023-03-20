@@ -94,6 +94,28 @@ year;
 -- больше 40000 рублей. Премия рассчитываются по формуле:
 -- общая стоимость всех проданных квартир * 15%
 --------------------------------------------------------------------
+WITH premias AS (
+	SELECT
+	realtors.id as realtor_id, SUM(sales.cost) * 0.15 AS value
+	FROM
+	realtors, sales
+	WHERE
+	sales.realtor_id = realtors.id
+	AND
+	EXTRACT(month FROM sales.date) = 5 AND EXTRACT(year FROM sales.date) = 2019
+	GROUP BY
+	realtors.id
+)
+
+SELECT
+realtors.s_name, realtors.f_name, realtors.t_name, premias.value
+FROM
+realtors, premias
+WHERE
+premias.realtor_id = realtors.id
+AND
+premias.value > 40000;
+
 
 --- 11 --------------------------------------------
 -- Вывести количество однокомнатных и двухкомнатных
