@@ -143,6 +143,25 @@ premias.value > 40000;
 -- Вывести количество объектов недвижимости по каждому району, общая площадь которых
 -- больше 40 м2. Использовать таблицу «Структура объекта недвижимости»
 ------------------------------------------------------------------------------------
+WITH obj_sq AS (
+	SELECT
+	object_id, SUM(square) AS rooms_sq
+	FROM
+	structures
+	GROUP BY
+	object_id
+)
+
+SELECT
+districts.name, COUNT(*)
+FROM
+districts, objects, obj_sq
+WHERE
+objects.district_id = districts.id
+AND
+objects.id = obj_sq.object_id AND obj_sq.rooms_sq > 40
+GROUP BY
+districts.name;
 
 --- 16 -------------------------------------------------------
 -- Используя функции для работы с датой:
