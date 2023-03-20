@@ -225,6 +225,18 @@ districts.name;
 -- вывести квартиры,которые были проданы
 -- не позже 4 месяцев после размещения объявления о их продаже
 --------------------------------------------------------------
+SELECT
+objects.address
+FROM
+objects, types, sales
+WHERE
+objects.type_id = types.id AND types.name = 'Квартира'
+AND
+sales.object_id = objects.id
+AND
+EXTRACT(MONTH FROM AGE(objects.date, sales.date)) > 0
+AND
+EXTRACT(MONTH FROM AGE(objects.date, sales.date)) <= 4;
 
 --- 17 --------------------------------------------------------
 -- Вывести адреса объектов недвижимости, стоимость 1м2 которых
