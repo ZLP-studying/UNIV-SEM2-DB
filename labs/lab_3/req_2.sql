@@ -92,6 +92,29 @@ year;
 -- Определить адреса квартир, стоимость 1м2
 -- которых меньше средней по району
 -------------------------------------------
+WITH dist_avg_cost AS (
+	SELECT
+	districts.id, AVG(objects.cost / objects.square) as sq_cost
+	FROM
+	districts, objects, types
+	WHERE
+	objects.type_id = types.id AND types.name = 'Квартира'
+	AND
+	objects.district_id = districts.id
+	GROUP BY
+	districts.id
+)
+
+SELECT
+objects.address
+FROM
+objects, dist_avg_cost, types
+WHERE
+objects.type_id = types.id AND types.name = 'Квартира'
+AND
+objects.district_id = dist_avg_cost.id
+AND
+objects.cost / objects.square < dist_avg_cost.sq_cost;
 
 --- 7 ------------------------------
 -- Определить ФИО риэлторов, которые
