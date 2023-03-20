@@ -163,6 +163,20 @@ premias.value > 40000;
 -- Вывести количество однокомнатных и двухкомнатных
 -- квартир в указанном районе
 ---------------------------------------------------
+SELECT
+CASE objects.rooms
+WHEN 1 THEN 'Однокомнатная'
+WHEN 2 THEN 'Двухкомнатная'
+END,
+COUNT(*)
+FROM
+objects, districts
+WHERE
+objects.district_id = districts.id AND districts.name = 'Митино'
+AND
+(objects.rooms = 1 OR objects.rooms = 2)
+GROUP BY
+objects.rooms;
 
 --- 12 ------------------------------------------------
 -- Определить индекс средней оценки по каждому критерию
