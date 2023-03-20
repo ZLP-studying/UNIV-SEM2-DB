@@ -2,6 +2,25 @@
 -- Вывести адреса объектов недвижимости, у которых стоимость
 -- 1 м2 меньше средней стоимости по району
 ------------------------------------------------------------
+WITH dist_avg_cost AS (
+	SELECT
+	districts.id, AVG(objects.cost / objects.square) as sq_cost
+	FROM
+	districts, objects
+	WHERE
+	objects.district_id = districts.id
+	GROUP BY
+	districts.id
+)
+
+SELECT
+objects.address
+FROM
+objects, dist_avg_cost
+WHERE
+objects.district_id = dist_avg_cost.id
+AND
+objects.cost / objects.square < dist_avg_cost.sq_cost;
 
 --- 2 -------------------------------------------
 -- Вывести название районов, в которых количество
