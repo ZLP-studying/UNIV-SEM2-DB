@@ -120,6 +120,13 @@ objects.cost / objects.square < dist_avg_cost.sq_cost;
 -- Определить ФИО риэлторов, которые
 -- ничего не продали в текущем году
 ------------------------------------
+SELECT s_name, f_name, t_name
+FROM realtors
+WHERE id NOT IN (
+    SELECT realtor_id 
+    FROM sales 
+    WHERE EXTRACT(YEAR FROM date) = EXTRACT(YEAR FROM NOW())
+);
 
 --- 8 ----------------------------------------
 -- Вывести названия районов, в которых средняя
@@ -182,6 +189,32 @@ objects.rooms;
 -- Определить индекс средней оценки по каждому критерию
 -- для указанного объекта недвижимости
 -------------------------------------------------------
+SELECT 
+  parameters.name AS parameter_name,
+  CASE 
+    WHEN AVG(rates.rate) >= 9 THEN '5 из 5'
+    WHEN AVG(rates.rate) >= 8 THEN '4 из 5'
+    WHEN AVG(rates.rate) >= 7 THEN '3 из 5'
+    WHEN AVG(rates.rate) >= 6 THEN '2 из 5'
+    ELSE '1 из 5'
+  END AS n_out_of_5,
+  CASE 
+    WHEN AVG(rates.rate) >= 9 THEN 'превосходно'
+    WHEN AVG(rates.rate) >= 8 THEN 'очень хорошо'
+    WHEN AVG(rates.rate) >= 7 THEN 'хорошо'
+    WHEN AVG(rates.rate) >= 6 THEN 'удовлетворительно'
+    ELSE 'недовлетворительно'
+  END AS equivalent_text
+FROM 
+  objects,
+  parameters,
+  rates
+WHERE 
+  objects.id = 1
+  AND objects.id = rates.object_id
+  AND rates.parameter_id = parameters.id
+GROUP BY 
+  parameters.name
 
 --- 13 ----------------------------------------------------------------
 -- Добавить новую таблицу «Структура объекта недвижимости» с колонками:
@@ -243,6 +276,18 @@ EXTRACT(MONTH FROM AGE(objects.date, sales.date)) <= 4;
 -- меньше среднейвсех объектов недвижимости по району,
 -- объявления о которых были размещены не более 4 месяцев назад
 ---------------------------------------------------------------
+SELECT o.address,
+CASE status 
+	WHEN FALSE THEN 'Продано'
+	WHEN TRUE THEN 'В продаже'
+END status
+FROM objects o
+WHERE o.date > CURRENT_DATE - INTERVAL '4 months'
+  AND o.cost / o.square < (
+    SELECT AVG(o2.cost / o2.square)
+    FROM objects o2
+    WHERE o2.district_id = o.district_id
+);
 
 --- 18 ---------------------------------------------------------
 -- Вывести информацию о количество продаж в предыдущем и текущем
