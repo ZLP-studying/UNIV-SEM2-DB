@@ -78,15 +78,15 @@ COUNT(*) < 120;
 -- от 2 до 3 объектов недвижимости
 --------------------------------------------
 SELECT
-extract(year from objects.date) as year, COUNT(*)
+EXTRACT(YEAR FROM objects.date) AS YEAR, COUNT(*)
 FROM
 objects
 GROUP BY
-year
+YEAR
 HAVING
-COUNT(*) > 10 AND COUNT(*) < 20
+COUNT(*) > 5 AND COUNT(*) < 10
 ORDER BY
-year;
+YEAR;
 
 --- 6 -------------------------------------
 -- Определить адреса квартир, стоимость 1м2
@@ -120,11 +120,12 @@ objects.cost / objects.square < dist_avg_cost.sq_cost;
 -- Определить ФИО риэлторов, которые
 -- ничего не продали в текущем году
 ------------------------------------
-SELECT s_name, f_name, t_name
+SELECT
+s_name, f_name, t_name
 FROM realtors
 WHERE id NOT IN (
-    SELECT realtor_id 
-    FROM sales 
+    SELECT realtor_id
+    FROM sales
     WHERE EXTRACT(YEAR FROM date) = EXTRACT(YEAR FROM NOW())
 );
 
@@ -137,17 +138,14 @@ WHERE id NOT IN (
 -- Вывести для указанного риэлтора (ФИО) года, в которых
 -- он продал больше 2 объектов недвижимости
 --------------------------------------------------------
-
 SELECT
 EXTRACT(YEAR FROM sales.date) as year
 FROM sales JOIN (
 	SELECT id
 	FROM realtors
 	WHERE
-		s_name = 'Сафронов' AND
-		f_name = 'Евгений' AND
-		t_name = 'Максимович'
-) as r1
+	s_name = 'Сафронов' AND f_name = 'Евгений' AND t_name = 'Максимович'
+) AS r1
 ON sales.realtor_id = r1.id
 GROUP BY EXTRACT(YEAR FROM sales.date)
 HAVING COUNT(*) > 2;
@@ -203,32 +201,29 @@ objects.rooms;
 -- Определить индекс средней оценки по каждому критерию
 -- для указанного объекта недвижимости
 -------------------------------------------------------
-SELECT 
-  parameters.name AS parameter_name,
-  CASE 
-    WHEN AVG(rates.rate) >= 9 THEN '5 из 5'
-    WHEN AVG(rates.rate) >= 8 THEN '4 из 5'
-    WHEN AVG(rates.rate) >= 7 THEN '3 из 5'
-    WHEN AVG(rates.rate) >= 6 THEN '2 из 5'
-    ELSE '1 из 5'
-  END AS n_out_of_5,
-  CASE 
-    WHEN AVG(rates.rate) >= 9 THEN 'превосходно'
-    WHEN AVG(rates.rate) >= 8 THEN 'очень хорошо'
-    WHEN AVG(rates.rate) >= 7 THEN 'хорошо'
-    WHEN AVG(rates.rate) >= 6 THEN 'удовлетворительно'
-    ELSE 'недовлетворительно'
-  END AS equivalent_text
-FROM 
-  objects,
-  parameters,
-  rates
-WHERE 
-  objects.id = 1
-  AND objects.id = rates.object_id
-  AND rates.parameter_id = parameters.id
-GROUP BY 
-  parameters.name
+SELECT
+parameters.name,
+CASE
+WHEN AVG(rates.rate) >= 9 THEN '5 из 5'
+WHEN AVG(rates.rate) >= 8 THEN '4 из 5'
+WHEN AVG(rates.rate) >= 7 THEN '3 из 5'
+WHEN AVG(rates.rate) >= 6 THEN '2 из 5'
+ELSE '1 из 5' END,
+CASE
+WHEN AVG(rates.rate) >= 9 THEN 'превосходно'
+WHEN AVG(rates.rate) >= 8 THEN 'очень хорошо'
+WHEN AVG(rates.rate) >= 7 THEN 'хорошо'
+WHEN AVG(rates.rate) >= 6 THEN 'удовлетворительно'
+ELSE 'неудовлетворительно' END
+FROM
+objects, parameters, rates
+WHERE
+objects.id = 2
+AND
+objects.id = rates.object_id
+AND
+rates.parameter_id = parameters.id
+GROUP BY parameters.name;
 
 --- 13 ----------------------------------------------------------------
 -- Добавить новую таблицу «Структура объекта недвижимости» с колонками:
@@ -241,7 +236,20 @@ GROUP BY
 --- 14 --------------------------------------------------
 -- Вывести информацию о комнатах для объекта недвижимости
 ---------------------------------------------------------
-TODO
+SELECT
+CASE structures.room_type_id
+WHEN 1 THEN 'Кухня'
+WHEN 2 THEN	'Гостиная'
+WHEN 3 THEN	'Туалет'
+WHEN 4 THEN	'Спальня'
+END,
+structures.square
+FROM
+structures, objects
+WHERE
+structures.object_id = objects.id
+AND
+objects.id = 1;
 
 --- 15 -----------------------------------------------------------------------------
 -- Вывести количество объектов недвижимости по каждому району, общая площадь которых
@@ -291,18 +299,35 @@ EXTRACT(MONTH FROM AGE(objects.date, sales.date)) <= 4;
 -- меньше среднейвсех объектов недвижимости по району,
 -- объявления о которых были размещены не более 4 месяцев назад
 ---------------------------------------------------------------
-SELECT o.address,
-CASE status 
-	WHEN FALSE THEN 'Продано'
-	WHEN TRUE THEN 'В продаже'
-END status
-FROM objects o
-WHERE o.date > CURRENT_DATE - INTERVAL '4 months'
-  AND o.cost / o.square < (
-    SELECT AVG(o2.cost / o2.square)
-    FROM objects o2
-    WHERE o2.district_id = o.district_id
-);
+WITH dist_avg_cost AS (
+	SELECT
+	districts.id, AVG(objects.cost / objects.square) as sq_cost
+	FROM
+	districts, objects, types
+	WHERE
+	objects.type_id = types.id AND types.name = 'Квартира'
+	AND
+	objects.district_id = districts.id
+	GROUP BY
+	districts.id
+)
+
+SELECT
+objects.address,
+CASE objects.status
+WHEN TRUE THEN 'в продаже'
+WHEN FALSE THEN 'продано'
+END
+FROM
+objects, sales, dist_avg_cost
+WHERE
+sales.object_id = objects.id
+AND
+EXTRACT(MONTH FROM AGE(NOW(), sales.date)) > 0 AND EXTRACT(MONTH FROM AGE(NOW(), sales.date)) <= 4
+AND
+dist_avg_cost.id = objects.district_id
+AND
+(objects.cost / objects.square) < dist_avg_cost.sq_cost;
 
 --- 18 ---------------------------------------------------------
 -- Вывести информацию о количество продаж в предыдущем и текущем
