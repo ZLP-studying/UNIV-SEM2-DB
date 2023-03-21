@@ -132,6 +132,16 @@ WHERE id NOT IN (
 -- Вывести названия районов, в которых средняя
 -- площадь продаваемых квартир больше 30м2
 ----------------------------------------------
+with "req" as(
+	select district_id, avg(square) 
+	from objects 
+	group by district_id)
+
+select districts.name 
+from districts, req
+where districts.id = req.district_id 
+and
+req.avg > 70
 
 --- 9 --------------------------------------------------
 -- Вывести для указанного риэлтора (ФИО) года, в которых
