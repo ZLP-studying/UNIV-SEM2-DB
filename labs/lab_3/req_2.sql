@@ -304,9 +304,13 @@ objects.type_id = types.id AND types.name = 'Квартира'
 AND
 sales.object_id = objects.id
 AND
-EXTRACT(MONTH FROM AGE(objects.date, sales.date)) > 0
+EXTRACT(MONTH FROM AGE(sales.date, objects.date)) > 0
 AND
-EXTRACT(MONTH FROM AGE(objects.date, sales.date)) <= 4;
+EXTRACT(MONTH FROM AGE(sales.date, objects.date)) <= 4
+AND
+EXTRACT(year FROM AGE(sales.date, objects.date)) > 0
+AND
+EXTRACT(year FROM AGE(sales.date, objects.date)) <= 1;
 
 --- 17 --------------------------------------------------------
 -- Вывести адреса объектов недвижимости, стоимость 1м2 которых
