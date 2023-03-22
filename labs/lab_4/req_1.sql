@@ -16,6 +16,14 @@
 -- Сделать так, чтобы функция из задания 2 сохраняла
 -- зп в этой таблице
 --------------------------------------------
+DROP TABLE IF EXISTS salary;
+CREATE TABLE realtors_salary
+(
+	realtor_id bigint references realtors(id),
+	month smallint,
+	year smallint,
+	salary double precision
+)
 
 --- 4 -----------------------------------
 -- Вывести ФИО риэлторов, которые продали
@@ -39,10 +47,54 @@
 -- ничего не продали в текущем году
 ------------------------------------
 
---- 8 ----------------------------------------
--- Вывести названия районов, в которых средняя
--- площадь продаваемых квартир больше 30м2
-----------------------------------------------
+--- 8 -------------------------------------------
+-- Создать функуцию, которая формирует список 
+-- объектов недвижимости, стоимость м2 у которых
+-- находится в заданном диапазоне, и они 
+-- принадлежат конкретному типу
+-------------------------------------------------
+CREATE OR REPLACE FUNCTION ex8
+(
+	low_cost double precision,
+	high_cost double precision,
+	obj_type character varying(32)
+)
+RETURNS TABLE
+(
+	adress character varying(64),
+	district character varying(32),
+	rooms_num bigint
+)
+AS $$
+SELECT address, name, rooms 
+FROM 
+(
+	(
+		SELECT address, district_id, square, rooms, cost, type_id
+		FROM objects
+	) AS "a"
+	JOIN 
+	(	
+		SELECT * 
+		FROM districts
+	) AS "b" 
+	ON 
+	"a".district_id = "b".id) 
+WHERE 
+cost/square 
+BETWEEN "low_cost" AND "high_cost"
+AND
+type_id =
+(
+	SELECT id 
+	FROM types 
+	WHERE
+	name = "obj_type"
+) 
+$$
+LANGUAGE SQL;
+
+select * from ex8(100000, 500000, 'Квартира')
 
 --- 9 --------------------------------------------------
 -- Вывести для указанного риэлтора (ФИО) года, в которых
@@ -65,14 +117,49 @@
 -- для указанного объекта недвижимости
 -------------------------------------------------------
 
---- 13 ----------------------------------------------------------------
--- Добавить новую таблицу «Структура объекта недвижимости» с колонками:
--- Объект недвижимости, Тип комнаты, Площадь.
--- Установите ограничение-проверку площади, которая должна быть
--- больше нуля и типа комнаты (1, 2, 3, 4), где
--- 1 – кухня, 2 – зал, 3 – спальня, 4 – санузел
------------------------------------------------------------------------
+--- 13 -----------------------------------------------------------------------
+-- Создайте функцию, которая формирует статистику по продажам за указанный год
+-- вывод: тип, количество продаж, процент от общего количества проданных объектов
+-- недвижимости, общая сумма продаж
+---------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION ex13
+(
+	year smallint
+)
+RETURNS TABLE
+(
+	obj_type character varying(32),
+	quantity smallint,
+	part double precision,
+	total_amount double precision
+)
+AS $$
+(SELECT name, COUNT(*) AS "quantity", (COUNT(*)/
+(
+	SELECT count(*) 
+	FROM sales 
+	WHERE EXTRACT (YEAR FROM date) = "year"
+)::double precision)*100, SUM(cost)
+FROM 
+(((
+	SELECT object_id, date, cost 
+	FROM sales
+	WHERE EXTRACT (YEAR FROM date) = "year"
+) AS "a"
+JOIN
+(
+	SELECT id, type_id
+	FROM objects
+) AS "b"
+ON "a".object_id = "b".id) AS "1"
+JOIN 
+(SELECT * FROM types) AS "2"
+ON "1".type_id = "2".id)
+GROUP BY name)
+$$
+LANGUAGE SQL;
 
+SELECT * FROM ex13(2022)
 --- 14 --------------------------------------------------
 -- Вывести информацию о комнатах для объекта недвижимости
 ---------------------------------------------------------
