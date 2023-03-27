@@ -14,6 +14,31 @@
 --проверку статуса объекта недвижимости. Если в таблице «Продажи» уже имеется
 --запись о продаже данного объекта, выводить соответствующее сообщение.
 ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION ex3()
+RETURNS TRIGGER AS
+$$
+BEGIN
+IF NEW.object_id IN
+(
+SELECT id
+FROM objects
+WHERE status = true
+) THEN
+RAISE EXCEPTION 'ERROR! Object has already been sold.';
+END IF;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER ex3
+BEFORE INSERT OR UPDATE
+ON sales
+FOR EACH ROW
+EXECUTE FUNCTION ex3();
+
+insert into sales(object_id,date,realtor_id,cost)
+values
+(2,'2019-10-10',3,19822000) 
 
 ---4-----------------------------------------------------------
 --Создать триггер, который при добавлении новой записи в таблицу «Структура
@@ -21,6 +46,31 @@
 --(в большую сторону) с общей площадью объекта недвижимости.
 --Выводить сообщение на сколько превышена площадь.
 -------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION ex4()
+RETURNS TRIGGER AS
+$$
+DECLARE delta integer;
+BEGIN
+delta = NEW.square + (select sum(square) from structures
+where object_id = NEW.object_id) -
+(select square from objects
+where id = NEW.object_id);
+IF delta > 0 THEN
+RAISE EXCEPTION 'ERROR! The square is less on (%)', delta*(-1);
+END IF;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER ex4
+BEFORE INSERT OR UPDATE
+ON structures
+FOR EACH ROW
+EXECUTE FUNCTION ex4();
+
+insert into structures
+values
+(2,1,37) 
 
 ---5-------------------------------------------------------------
 --5 Добавить таблицу «Бонусы», в которой будет две колонки: код риэлтора и размер
