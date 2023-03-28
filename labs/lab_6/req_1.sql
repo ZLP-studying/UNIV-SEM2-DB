@@ -38,6 +38,30 @@ SELECT * FROM objects
 -- Между серией и номером паспорта пробел. При несоответствии 
 -- вводимой информации маске, выводитьсообщение.
 ----------------------------------------------------------------
+ALTER TABLE realtors
+	ADD COLUMN passport character varying(11);
+	
+CREATE OR REPLACE FUNCTION lab_6_ex_2()
+RETURNS TRIGGER AS 
+$$
+	BEGIN
+		IF NEW.passport NOT LIKE '____ ______' THEN 
+			RAISE EXCEPTION 'ERROR! Invalid passport input.';
+		END IF;
+		RETURN NEW;
+	END;
+$$ LANGUAGE PLpgsql;
+
+CREATE OR REPLACE TRIGGER lab_6_ex_2
+BEFORE INSERT OR UPDATE 
+ON realtors
+FOR EACH ROW
+EXECUTE FUNCTION lab_6_ex_2();
+
+insert into realtors
+(passport)
+values
+('aaaaa aaaaa')
 
 ---3------------------------------------------------------------
 -- Создать триггер, который при добавлении нового риэлтора 
