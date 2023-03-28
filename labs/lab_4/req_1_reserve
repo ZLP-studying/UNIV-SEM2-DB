@@ -1,7 +1,7 @@
 
 -- ex14
 
-CREATE OR REPLACE FUNCTION ex14
+CREATE OR REPLACE FUNCTION lab_4_ex_14
 (
 	obj_id integer,
 	rate double precision,
@@ -16,11 +16,11 @@ WHERE id = "obj_id"
 $$
 LANGUAGE SQL;
 
-SELECT * FROM ex14(1,13,24,10000000)
+SELECT * FROM lab_4_ex_14(1,13,24,10000000)
 
 --ex15
 
-CREATE OR REPLACE FUNCTION ex15
+CREATE OR REPLACE FUNCTION lab_4_ex_15
 (
 	obj_id integer,
 	rate double precision,
@@ -35,4 +35,4 @@ WHERE "obj_id" = id
 $$
 LANGUAGE SQL;
 
-SELECT * FROM ex15(1,13,100)
+SELECT * FROM lab_4_ex_15(1,13,100)
