@@ -14,7 +14,7 @@
 --проверку статуса объекта недвижимости. Если в таблице «Продажи» уже имеется
 --запись о продаже данного объекта, выводить соответствующее сообщение.
 ---------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION ex3()
+CREATE OR REPLACE FUNCTION lab_5_ex3()
 RETURNS TRIGGER AS
 $$
 BEGIN
@@ -30,11 +30,11 @@ RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER ex3
+CREATE OR REPLACE TRIGGER lab_5_ex3
 BEFORE INSERT OR UPDATE
 ON sales
 FOR EACH ROW
-EXECUTE FUNCTION ex3();
+EXECUTE FUNCTION lab_5_ex3();
 
 insert into sales(object_id,date,realtor_id,cost)
 values
@@ -46,7 +46,7 @@ values
 --(в большую сторону) с общей площадью объекта недвижимости.
 --Выводить сообщение на сколько превышена площадь.
 -------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION ex4()
+CREATE OR REPLACE FUNCTION lab_5_ex4()
 RETURNS TRIGGER AS
 $$
 DECLARE delta integer;
@@ -62,11 +62,11 @@ RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER ex4
+CREATE OR REPLACE TRIGGER lab_5_ex4
 BEFORE INSERT OR UPDATE
 ON structures
 FOR EACH ROW
-EXECUTE FUNCTION ex4();
+EXECUTE FUNCTION lab_5_ex4();
 
 insert into structures
 values
