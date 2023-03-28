@@ -67,6 +67,35 @@ values
 -- Создать триггер, который при добавлении нового риэлтора 
 -- формат телефона:79996667788 преобразует в: +7 (999) 666 77 88
 ----------------------------------------------------------------
+ALTER TABLE REALTORS 
+	ALTER COLUMN contacts TYPE character varying(24);
+
+CREATE OR REPLACE FUNCTION lab_6_ex_3()
+RETURNS TRIGGER AS 
+$$
+	BEGIN
+		NEW.contacts = 
+		CONCAT('+',substr(NEW.contacts,1,1),
+			  ' (', substr(NEW.contacts,2,3),') ',
+			  substr(NEW.contacts,5,3), ' ',
+			  substr(NEW.contacts,8,2), ' ',
+			  substr(NEW.contacts,10,2), ' ');
+		RETURN NEW;
+	END;
+$$ LANGUAGE PLpgsql;
+
+CREATE OR REPLACE TRIGGER lab_6_ex_3
+BEFORE INSERT OR UPDATE 
+ON realtors
+FOR EACH ROW
+EXECUTE FUNCTION lab_6_ex_3();
+
+INSERT INTO realtors
+(contacts)
+VALUES
+(79992223311);
+
+SELECT * FROM realtors;
 
 ---4------------------------------------------------------------
 -- Создать триггер, который будет проверять соответствие 
