@@ -5,6 +5,30 @@
 -- недвижимости при добавлении новой записи (значение поля 
 -- «Стоимость» не указывать).
 ----------------------------------------------------------------
+ALTER TABLE objects 
+	ADD COLUMN cost_per_m2 double precision;
+
+CREATE OR REPLACE FUNCTION lab_6_ex1()
+RETURNS TRIGGER AS
+$$
+	BEGIN
+	NEW.cost = NEW.square * NEW.cost_per_m2;
+	RETURN NEW;
+	END;
+$$ LANGUAGE PLpgsql;
+
+CREATE OR REPLACE TRIGGER lab_6_ex2
+BEFORE INSERT OR UPDATE
+ON objects
+FOR EACH ROW
+EXECUTE FUNCTION lab_6_ex1();
+
+INSERT INTO objects
+(square,cost_per_m2)
+VALUES
+(2,50)
+
+SELECT * FROM objects
 
 ---2------------------------------------------------------------
 -- В таблицу «Риэлторы» добавить колонку «Паспортные данные». 
