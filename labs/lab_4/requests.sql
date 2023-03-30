@@ -171,28 +171,26 @@ RETURNS TABLE
 	total_amount double precision
 )
 AS $$
-(SELECT name, COUNT(*) AS "quantity", (COUNT(*)/
+SELECT
+types.name, COUNT(*),
 (
-	SELECT count(*)
+	COUNT(*) /
+	(
+	SELECT COUNT(*)
 	FROM sales
-	WHERE EXTRACT (YEAR FROM date) = "year"
-)::double precision)*100, SUM(cost)
+	WHERE EXTRACT (YEAR FROM sales.date) = "year"
+	)::double precision
+) * 100,
+SUM(sales.cost)
 FROM
-(((
-	SELECT object_id, date, cost
-	FROM sales
-	WHERE EXTRACT (YEAR FROM date) = "year"
-) AS "a"
-JOIN
-(
-	SELECT id, type_id
-	FROM objects
-) AS "b"
-ON "a".object_id = "b".id) AS "1"
-JOIN
-(SELECT * FROM types) AS "2"
-ON "1".type_id = "2".id)
-GROUP BY name)
+sales, objects, types
+WHERE
+objects.type_id = types.id
+AND
+sales.object_id = objects.id
+AND
+EXTRACT (YEAR FROM sales.date) = "year"
+GROUP BY types.name
 $$
 LANGUAGE SQL;
 
