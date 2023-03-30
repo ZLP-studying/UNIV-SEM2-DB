@@ -208,3 +208,19 @@ FROM lab_4_ex_13(2022);
 -- Написать функцию, которая рассчитывает сумму налога на недвижимость
 -- Входные параметры: ставка, размер доли
 ----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION lab_4_ex_15
+(
+	obj_id integer,
+	rate double precision,
+	part double precision
+)
+RETURNS double precision
+AS $$
+SELECT
+objects.cost * "part" / 100 * "rate" / 100
+FROM objects
+WHERE objects.id = "obj_id"
+$$
+LANGUAGE SQL;
+
+SELECT * FROM lab_4_ex_15(1, 13, 100);
