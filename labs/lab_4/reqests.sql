@@ -30,7 +30,32 @@
 -- Рассчитывает процент изменения продажной стоимости объекта недвижимости
 -- от первоначально заявленной и срок продажи (в месяцах)
 --------------------------------------------------------------------------
+DROP FUNCTION IF EXISTS lab_4_ex_5(integer);
+CREATE OR REPLACE FUNCTION lab_4_ex_5
+(
+	object_id integer
+)
+RETURNS TABLE
+(
+	diff_percent numeric,
+	term_of_sale_month int
+)
+AS $$
+SELECT
+ROUND(((sales.cost / objects.cost - 1) * 100)::numeric, 2),
+EXTRACT(month FROM AGE(sales.date, objects.date)) +
+EXTRACT(year FROM AGE(sales.date, objects.date)) * 12
+FROM
+objects, sales
+WHERE
+objects.id = $1
+AND
+objects.id = sales.object_id
+$$
+LANGUAGE SQL;
 
+SELECT *
+FROM lab_4_ex_5(1);
 
 --- 6 ----------------------------------------------------------
 -- Изменить функцию, созданную в пункте 5 таким образом, чтобы в
@@ -61,30 +86,15 @@ RETURNS TABLE
 	rooms_num bigint
 )
 AS $$
-SELECT address, name, rooms
+SELECT objects.address, districts.name, objects.rooms
 FROM
-(
-	(
-		SELECT address, district_id, square, rooms, cost, type_id
-		FROM objects
-	) AS "a"
-	JOIN
-	(
-		SELECT *
-		FROM districts
-	) AS "b"
-	ON
-	"a".district_id = "b".id)
+objects, districts, types
 WHERE
-(cost/square) BETWEEN "low_cost" AND "high_cost"
+objects.district_id = districts.id
 AND
-type_id =
-(
-	SELECT id
-	FROM types
-	WHERE
-	name = "obj_type"
-)
+objects.type_id = types.id AND types.name = $3
+AND
+(objects.cost/objects.square) BETWEEN "low_cost" AND "high_cost"
 $$
 LANGUAGE SQL;
 
@@ -103,7 +113,33 @@ FROM lab_4_ex_8(100000, 500000, 'Квартира');
 -- комнаты объекта недвижимости от общей площади.
 -- Входной параметр: адрес квартиры
 -------------------------------------------------------------
+DROP FUNCTION IF EXISTS lab_4_ex_10(character varying(64));
+CREATE OR REPLACE FUNCTION lab_4_ex_10
+(
+	object_address character varying(64)
+)
+RETURNS TABLE
+(
+	room_type integer,
+	room_percent numeric,
+	object_id integer
+)
+AS $$
+SELECT
+structures.room_type_id,
+ROUND((objects.square / structures.square)::numeric, 2),
+objects.id
+FROM
+objects, structures
+WHERE
+objects.address = $1
+AND
+objects.id = structures.object_id
+$$
+LANGUAGE SQL;
 
+SELECT *
+FROM lab_4_ex_10('Логвиново, дом 13, кв 3');
 
 --- 11 -----------------------------------------------------
 -- Определяет ФИО риэлторов, продавших квартиры, более чем в
