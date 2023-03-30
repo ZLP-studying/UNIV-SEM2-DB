@@ -92,4 +92,4 @@ CREATE TABLE realtors_salary
 	month smallint,
 	year smallint,
 	salary double precision
-)
+);
