@@ -10,7 +10,24 @@
 -- «Продажи» с использованием агрегатной функции),
 -- S – коэффициент, R – премия
 ----------------------------------------------------------------
+CREATE OR REPLACE FUNCTION lab4_ex2(
+	s double precision,
+	r double precision,
+	start_date date,
+	end_date date,
+	realtor_surname varchar)
+RETURNS double precision
+AS $$
+SELECT 
+(SELECT SUM(sales.cost) FROM sales JOIN realtors ON sales.realtor_id = 
+realtors.id
+WHERE realtors.s_name = realtor_surname AND sales.date BETWEEN start_date AND 
+end_date) * s + r
+$$
+LANGUAGE SQL;
 
+SELECT *
+FROM lab4_ex2 (0.03,15000,'10.01.2017','10.02.2018','Сафронов');
 
 --- 3 -----------------------------------------------------
 -- Добавить таблицу «Заработная плата риэлтора», содержащая
@@ -67,7 +84,20 @@ FROM lab_4_ex_5(1);
 -- Формирует список средних оценок по каждому критерию для
 -- объекта недвижимости
 ----------------------------------------------------------
+CREATE OR REPLACE FUNCTION lab4_ex7(object_id bigint)
+RETURNS TABLE (criteria_name varchar, avg_rate double precision)
+AS $$
+SELECT name, AVG(rate) 
+FROM parameters JOIN rates
+ON parameters.id = rates.parameter_id
+JOIN objects ON objects.id = rates.object_id
+WHERE objects.id = $1
+GROUP BY name
+$$
+LANGUAGE SQL;
 
+SELECT *
+FROM lab4_ex7(1);
 
 --- 8 ------------------------------------------------------------
 -- Формирует список объектов недвижимости, стоимость 1м2 у которых
@@ -153,7 +183,28 @@ FROM lab_4_ex_10('Логвиново, дом 13, кв 3');
 -- одном районе (1), но не продавших в другом (2)
 -- Входные параметры: название района 1 и 2
 -------------------------------------------------
+CREATE OR REPLACE FUNCTION lab4_ex12(district_1 varchar,district_2 varchar)
+RETURNS TABLE (FIO varchar)
+AS $$(
+SELECT CONCAT(s_name,' ', f_name, ' ', t_name)
+FROM realtors JOIN sales 
+ON sales.realtor_id = realtors.id
+JOIN objects ON objects.id = sales.object_id
+JOIN districts ON districts.id = objects.district_id
+WHERE districts.name = $1
+)EXCEPT
+(
+SELECT CONCAT(s_name,' ', f_name, ' ', t_name)
+FROM realtors JOIN sales 
+ON sales.realtor_id = realtors.id
+JOIN objects ON objects.id = sales.object_id
+JOIN districts ON districts.id = objects.district_id
+WHERE districts.name = $2)
+$$
+LANGUAGE SQL;
 
+SELECT *
+FROM lab4_ex12('Митино', 'ы');
 
 --- 13 ---------------------------------------------
 -- Формирует статистику по продажам за указанный год
