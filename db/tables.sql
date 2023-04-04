@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS structures (
 	square double precision CHECK (square > 0)
 );
 
--- "Зарплаты риелторов" -- realtors_salary
+-- «Зарплаты риелторов» -- realtors_salary
 DROP TABLE IF EXISTS realtors_salary;
 CREATE TABLE realtors_salary
 (
@@ -92,4 +92,12 @@ CREATE TABLE realtors_salary
 	month smallint,
 	year smallint,
 	salary double precision
+);
+
+-- «Бонусы» -- bonuses
+DROP TABLE IF EXISTS bonuses CASCADE;
+CREATE TABLE bonuses
+(
+	realtor_id bigint references realtors(id),
+	bonus double precision
 );
