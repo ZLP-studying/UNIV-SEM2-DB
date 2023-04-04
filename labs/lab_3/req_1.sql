@@ -129,7 +129,7 @@ realtors.id, realtors.f_name, SUM(sales.cost)
 FROM
 realtors, objects, sales, types
 WHERE
-sales.object_id = objects.id
+sales.object_id = objects.type_id
 AND
 sales.date > '20.09.2010' AND sales.date < '20.09.2018'
 AND
