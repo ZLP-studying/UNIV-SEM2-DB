@@ -246,6 +246,33 @@ GROUP BY parameters.name;
 -- больше нуля и типа комнаты (1, 2, 3, 4), где
 -- 1 – кухня, 2 – зал, 3 – спальня, 4 – санузел
 -----------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION structures_tigger()
+RETURNS TRIGGER AS
+$$
+BEGIN
+IF NEW.square < 0 THEN
+RAISE EXCEPTION 'ERROR! Square < 0';
+END IF;
+IF NEW.room_type_id > 4 THEN
+RAISE EXCEPTION 'ERROR! room_type_id > 4';
+END IF;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER structures_tigger
+BEFORE INSERT OR UPDATE
+ON structures
+FOR EACH ROW
+EXECUTE FUNCTION structures_tigger();
+
+-- «Структуры квартир» - structures
+DROP TABLE IF EXISTS structures CASCADE;
+CREATE TABLE IF NOT EXISTS structures (
+	object_id bigint references objects(id),
+	room_type_id bigint,
+	square double precision
+);
 
 --- 14 --------------------------------------------------
 -- Вывести информацию о комнатах для объекта недвижимости
@@ -308,9 +335,7 @@ EXTRACT(MONTH FROM AGE(sales.date, objects.date)) > 0
 AND
 EXTRACT(MONTH FROM AGE(sales.date, objects.date)) <= 4
 AND
-EXTRACT(year FROM AGE(sales.date, objects.date)) > 0
-AND
-EXTRACT(year FROM AGE(sales.date, objects.date)) <= 1;
+EXTRACT(YEAR FROM AGE(sales.date, objects.date)) = 0;
 
 --- 17 --------------------------------------------------------
 -- Вывести адреса объектов недвижимости, стоимость 1м2 которых
@@ -342,6 +367,8 @@ WHERE
 sales.object_id = objects.id
 AND
 EXTRACT(MONTH FROM AGE(NOW(), sales.date)) > 0 AND EXTRACT(MONTH FROM AGE(NOW(), sales.date)) <= 4
+AND
+EXTRACT(YEAR FROM AGE(NOW(), sales.date)) = 0
 AND
 dist_avg_cost.id = objects.district_id
 AND
