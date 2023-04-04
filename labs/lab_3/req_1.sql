@@ -125,17 +125,17 @@ GROUP BY districts.name;
 -- проданных в диапазоне дат «ОТ» и «ДО» по каждому риэлтору
 ----------------------------------------------------------------
 SELECT
-realtors.id, realtors.f_name, SUM(sales.cost)
+realtors.s_name, realtors.f_name, realtors.t_name, SUM(sales.cost)
 FROM
 realtors, objects, sales, types
 WHERE
-sales.object_id = objects.type_id
+sales.object_id = objects.id
 AND
 sales.date > '20.09.2010' AND sales.date < '20.09.2018'
 AND
 sales.realtor_id = realtors.id
 AND
-types.id = objects.id AND types.name = 'Апартаменты'
+types.id = objects.type_id AND types.name = 'Апартаменты'
 GROUP BY realtors.id;
 
 -- 11 -------------------------------------------
