@@ -80,8 +80,8 @@ CREATE TABLE IF NOT EXISTS sales (
 DROP TABLE IF EXISTS structures CASCADE;
 CREATE TABLE IF NOT EXISTS structures (
 	object_id bigint references objects(id),
-	room_type_id bigint,
-	square double precision
+	room_type_id bigint CHECK (room_type_id > 0 AND room_type_id < 5),
+	square double precision CHECK (square > 0)
 );
 
 -- "Зарплаты риелторов" -- realtors_salary
