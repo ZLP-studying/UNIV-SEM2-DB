@@ -352,41 +352,26 @@ AND
 -- годах по каждому району, а также процент изменения
 ----------------------------------------------------------------
 WITH "2021" AS (
-  SELECT
-  district_id, COUNT(*)
-	FROM (
-    (
-      SELECT object_id
-      FROM sales
-      WHERE EXTRACT(year FROM sales.date) = 2021
-    ) as "a"
-    JOIN
-    (
-      SELECT
-      objects.id, objects.district_id
-      FROM objects
-    ) AS "b"
-    ON "a".object_id = "b".id
-  )
-  GROUP BY district_id
+	SELECT
+	objects.district_id, COUNT(*)
+	FROM
+	objects, sales
+	WHERE
+	objects.id = sales.object_id
+	AND
+	EXTRACT(year FROM sales.date) = 2021
+	GROUP BY district_id
 ),
 "2022" AS (
-  SELECT district_id, count(*)
-  FROM (
-    (
-      SELECT object_id
-      FROM sales
-      WHERE EXTRACT(year FROM sales.date) = 2022
-    ) AS "a"
-    JOIN
-    (
-      SELECT
-      objects.id, objects.district_id
-      FROM objects
-    ) as "b"
-    ON "a".object_id = "b".id
-  )
-  GROUP BY district_id
+	SELECT
+	objects.district_id, COUNT(*)
+	FROM
+	objects, sales
+	WHERE
+	objects.id = sales.object_id
+	AND
+	EXTRACT(year FROM sales.date) = 2022
+	GROUP BY district_id
 )
 
 SELECT
