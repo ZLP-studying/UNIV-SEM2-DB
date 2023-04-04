@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS rates (
 	rate double precision
 );
 
--- «Риэлторы» - realtors
+-- «Риелторы» - realtors
 DROP TABLE IF EXISTS realtors CASCADE;
 CREATE TABLE IF NOT EXISTS realtors (
 	id SERIAL PRIMARY KEY,
@@ -74,4 +74,22 @@ CREATE TABLE IF NOT EXISTS sales (
 	date date,
 	realtor_id bigint references realtors(id),
 	cost double precision
+);
+
+-- «Структуры квартир» - structures
+DROP TABLE IF EXISTS structures CASCADE;
+CREATE TABLE IF NOT EXISTS structures (
+	object_id bigint references objects(id),
+	room_type_id bigint,
+	square double precision
+);
+
+-- "Зарплаты риелторов" -- realtors_salary
+DROP TABLE IF EXISTS realtors_salary;
+CREATE TABLE realtors_salary
+(
+	realtor_id bigint references realtors(id),
+	month smallint,
+	year smallint,
+	salary double precision
 );

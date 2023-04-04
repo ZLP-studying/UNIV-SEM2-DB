@@ -8,7 +8,12 @@ const DISTRICTS_NAMES: [&str; 4] = ["Митино", "Крылатское", "Х�
 // Addresses names per districts
 const ADDRESSES: [[&str; 4]; DISTRICTS_NAMES.len()] = [
     ["Митинская", "Дубравная", "Барышиха", "Пятницкое шоссе"],
-    ["Осенний бульвар","Крылатские холмы","Рублевское шоссе","Осенняя",],
+    [
+        "Осенний бульвар",
+        "Крылатские холмы",
+        "Рублевское шоссе",
+        "Осенняя",
+    ],
     ["Фестивальная", "Дыбенко", "Петрозаводская", "Лавочкина"],
     ["Гоголя", "Логвиново", "Панфиловский проспект", "Каменко"],
 ];
@@ -93,6 +98,10 @@ fn main() {
     print!("\n");
     // Sales
     gen_sales(objects_nr);
+    print!("\n");
+    // Rooms structures
+    gen_structures(objects_nr);
+
 }
 
 fn gen_types() {
@@ -355,5 +364,34 @@ fn gen_sales(objects_nr: u32) {
             result.push(';');
         }
         println!("{}", result);
+    }
+}
+
+fn gen_structures(objects_nr: u32) {
+    println!("-- «Структуры квартир» - structures");
+    println!("INSERT INTO structures");
+    println!("(object_id, room_type_id, square)");
+    println!("VALUES");
+
+    // Random seed
+    let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
+
+    for i in 1..=objects_nr {
+        let rooms_count = rng.gen_range(1..=8);
+        for j in 1..=rooms_count {
+            let result = &mut ("(".to_owned()
+            + &i.to_string() // Object id
+            + ", "
+            + &rng.gen_range(1..=4).to_string() // Room type id
+            + ", "
+            + &rng.gen_range(5..=25).to_string() // Room square
+            + ")");
+            if i == objects_nr && j == rooms_count {
+                result.push(';');
+            } else {
+                result.push(',');
+            }
+            println!("{}", result);
+        }
     }
 }
