@@ -308,9 +308,7 @@ EXTRACT(MONTH FROM AGE(sales.date, objects.date)) > 0
 AND
 EXTRACT(MONTH FROM AGE(sales.date, objects.date)) <= 4
 AND
-EXTRACT(year FROM AGE(sales.date, objects.date)) > 0
-AND
-EXTRACT(year FROM AGE(sales.date, objects.date)) <= 1;
+EXTRACT(YEAR FROM AGE(sales.date, objects.date)) = 0;
 
 --- 17 --------------------------------------------------------
 -- Вывести адреса объектов недвижимости, стоимость 1м2 которых
@@ -343,6 +341,8 @@ sales.object_id = objects.id
 AND
 EXTRACT(MONTH FROM AGE(NOW(), sales.date)) > 0 AND EXTRACT(MONTH FROM AGE(NOW(), sales.date)) <= 4
 AND
+EXTRACT(YEAR FROM AGE(NOW(), sales.date)) = 0
+AND
 dist_avg_cost.id = objects.district_id
 AND
 (objects.cost / objects.square) < dist_avg_cost.sq_cost;
@@ -352,41 +352,26 @@ AND
 -- годах по каждому району, а также процент изменения
 ----------------------------------------------------------------
 WITH "2021" AS (
-  SELECT
-  district_id, COUNT(*)
-	FROM (
-    (
-      SELECT object_id
-      FROM sales
-      WHERE EXTRACT(year FROM sales.date) = 2021
-    ) as "a"
-    JOIN
-    (
-      SELECT
-      objects.id, objects.district_id
-      FROM objects
-    ) AS "b"
-    ON "a".object_id = "b".id
-  )
-  GROUP BY district_id
+	SELECT
+	objects.district_id, COUNT(*)
+	FROM
+	objects, sales
+	WHERE
+	objects.id = sales.object_id
+	AND
+	EXTRACT(year FROM sales.date) = 2021
+	GROUP BY district_id
 ),
 "2022" AS (
-  SELECT district_id, count(*)
-  FROM (
-    (
-      SELECT object_id
-      FROM sales
-      WHERE EXTRACT(year FROM sales.date) = 2022
-    ) AS "a"
-    JOIN
-    (
-      SELECT
-      objects.id, objects.district_id
-      FROM objects
-    ) as "b"
-    ON "a".object_id = "b".id
-  )
-  GROUP BY district_id
+	SELECT
+	objects.district_id, COUNT(*)
+	FROM
+	objects, sales
+	WHERE
+	objects.id = sales.object_id
+	AND
+	EXTRACT(year FROM sales.date) = 2022
+	GROUP BY district_id
 )
 
 SELECT
