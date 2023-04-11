@@ -41,7 +41,7 @@ FROM lab4_ex2 (0.03,15000,'10.01.2017','10.02.2018','Сафронов');
 -- Создать функцию, которая возвращает самые низкую и высокую
 -- зарплаты необходимо месяца и года среди риэлторов
 -------------------------------------------------------------
-
+<Зависимость от номера 3>
 
 --- 5 --------------------------------------------------------------------
 -- Рассчитывает процент изменения продажной стоимости объекта недвижимости
@@ -136,7 +136,37 @@ FROM lab_4_ex_8(100000, 500000, 'Квартира');
 -- объектов недвижимости между годом №1 и годом №2.
 -- Входные параметры: год 1, год 2, тип объекта недвижимости
 -------------------------------------------------------------
+CREATE OR REPLACE FUNCTION lab_4_ex_9(
+IN start_year numeric,
+IN end_year numeric,
+IN type_id bigint,
+OUT delta double precision
+)
+AS $$(
+	SELECT (
+	SELECT (
+		SELECT AVG(sales.cost)
+		FROM sales
+		JOIN objects ON objects.id = sales.object_id
+		WHERE objects.type_id = type_id
+		AND EXTRACT(YEAR FROM sales.date) = start_year
+	)
+	/
+	(
+	SELECT (
+		SELECT AVG(sales.cost)
+		FROM sales
+		JOIN objects ON objects.id = sales.object_id
+		WHERE objects.type_id = type_id
+		AND EXTRACT(YEAR FROM sales.date) = end_year
+	)
+	) - 1
+	) * 100
+)
+$$
+LANGUAGE SQL;
 
+SELECT * FROM lab_4_ex_9(2017, 2020, 2)
 
 --- 10 ------------------------------------------------------
 -- Рассчитывает какой процент составляет площадь каждого типа
@@ -253,7 +283,21 @@ FROM lab_4_ex_13(2022);
 -- Входные параметры:
 -- код объекта недвижимости, процентная ставка, срок, первоначальный взнос
 -------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION lab_4_ex_14 (
+	IN object_id int,
+	IN perc double precision,
+	IN term int,
+	IN initial_pay int,
+	OUT month_pay double precision
+)
+AS $$
+SELECT (cost - initial_pay) * ((perc/100/12 * POWER(1 + perc/100/12, term)) / (POWER(1 + perc/12/100, term)-1))
+FROM objects
+WHERE objects.id = object_id
+$$
+LANGUAGE SQL;
 
+SELECT * FROM lab_4_ex_14(6, 4, 12, 200000)
 
 --- 15 ---------------------------------------------------------------
 -- Написать функцию, которая рассчитывает сумму налога на недвижимость
