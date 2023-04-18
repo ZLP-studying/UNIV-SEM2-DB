@@ -1,7 +1,18 @@
 --- 1 ----------------------------------------------------------
 -- Конвертирует стоимость объекта недвижимости в евро и долларах
 ----------------------------------------------------------------
+CREATE OR REPLACE FUNCTION lab4_ex1(object_id BIGINT, currency CHAR(3))
+RETURNS DOUBLE PRECISION AS $$
+BEGIN
+    IF currency = 'USD' THEN
+        RETURN (SELECT cost / 80  FROM objects WHERE id = object_id);
+    ELSIF currency = 'EUR' THEN
+        RETURN (SELECT cost / 90 FROM objects WHERE id = object_id);
+    END IF;
+END;
+$$ LANGUAGE SQL;
 
+SELECT lab4_ex1(1, 'EUR');
 
 --- 2 ----------------------------------------------------------
 -- Рассчитывает заработную плату риэлтора по формуле: N*S+R, где
@@ -36,12 +47,48 @@ FROM lab4_ex2 (0.03,15000,'10.01.2017','10.02.2018','Сафронов');
 -- заработная плата сохранялась в этой таблице
 -----------------------------------------------------------
 ---
+CREATE OR REPLACE FUNCTION lab4_ex3(
+    s DOUBLE PRECISION,
+    r DOUBLE PRECISION,
+    start_date DATE,
+    end_date DATE,
+    realtor_surname VARCHAR)
+RETURNS DOUBLE PRECISION AS $$
+DECLARE
+    salary DOUBLE PRECISION;
+BEGIN
+    SELECT SUM(sales.cost) * s + r
+    INTO salary
+    FROM sales
+    JOIN realtors ON sales.realtor_id = realtors.id
+    WHERE realtors.s_name = realtor_surname
+    AND sales.date BETWEEN start_date AND end_date;
 
+    INSERT INTO realtors_salary (realtor_id, month, year, salary)
+    SELECT r.id, EXTRACT(MONTH FROM start_date), EXTRACT(YEAR FROM start_date), salary
+    FROM realtors r
+    WHERE r.s_name = realtor_surname;
+
+    RETURN salary;
+END;
+$$
+LANGUAGE SQL;
 --- 4 -------------------------------------------------------
 -- Создать функцию, которая возвращает самые низкую и высокую
 -- зарплаты необходимо месяца и года среди риэлторов
 -------------------------------------------------------------
-<Зависимость от номера 3>
+DROP FUNCTION IF EXISTS lab4_ex4(r_month INT, r_year INT);
+CREATE OR REPLACE FUNCTION lab4_ex4(r_month INT, r_year INT)
+RETURNS TABLE (min_salary DOUBLE PRECISION, max_salary DOUBLE PRECISION) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT MIN(salary), MAX(salary)
+    FROM realtors_salary
+    WHERE realtors_salary.month = r_month AND realtors_salary.year = r_year;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT * FROM lab4_ex4(1, 2017);
 
 --- 5 --------------------------------------------------------------------
 -- Рассчитывает процент изменения продажной стоимости объекта недвижимости
@@ -78,6 +125,44 @@ FROM lab_4_ex_5(1);
 -- Изменить функцию, созданную в пункте 5 таким образом, чтобы в
 -- зависимости от срока продажи выводилось сообщение
 ----------------------------------------------------------------
+DROP FUNCTION IF EXISTS lab_4_ex_6(integer);
+CREATE OR REPLACE FUNCTION lab_4_ex_6
+(
+	object_id integer
+)
+RETURNS TABLE
+(
+	message varchar,
+	sale_term int
+)
+AS $$
+BEGIN
+    SELECT
+        CASE 
+            WHEN AGE(sales.date, objects.date) <= interval '3 months' THEN 'Очень быстро'
+            WHEN AGE(sales.date, objects.date) >= interval '3 months'
+			AND AGE(sales.date, objects.date) < interval '6 months' THEN 'Быстро'
+			WHEN AGE(sales.date, objects.date) >= interval '6 months' 
+			AND AGE(sales.date, objects.date) < interval '1 year' THEN 'Долго'
+            WHEN AGE(sales.date, objects.date) >= interval '1 year' THEN 'Очень долго'
+        END,
+        EXTRACT(month FROM AGE(sales.date, objects.date)) + EXTRACT(year FROM AGE(sales.date, objects.date)) * 12
+    INTO message, sale_term
+    FROM
+        objects, sales
+    WHERE
+        objects.id = $1
+        AND objects.id = sales.object_id;
+        
+    RETURN NEXT;
+END;
+$$
+LANGUAGE plpgsql;
+
+
+
+SELECT * FROM lab_4_ex_6(3);
+
 
 
 --- 7 ----------------------------------------------------
@@ -206,7 +291,30 @@ FROM lab_4_ex_10('Логвиново, дом 13, кв 3');
 -- двух районах.
 -- Предусмотреть вывод ФИО в следующем формате: Иванов И.И.
 ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION lab4_ex11()
+RETURNS TABLE (
+    realtor_name varchar
+)
+AS $$
+BEGIN
+    RETURN QUERY (
+        SELECT DISTINCT
+            CONCAT_WS(' ', r.s_name, LEFT(r.f_name, 1) || '.', LEFT(r.t_name, 1) || '.')::varchar AS realtor_name
+        FROM
+            sales s
+            JOIN objects o ON s.object_id = o.id
+            JOIN districts d ON o.district_id = d.id
+            JOIN realtors r ON s.realtor_id = r.id
+        GROUP BY
+            r.id
+        HAVING
+            COUNT(DISTINCT d.id) > 2
+    );
+END;
+$$ LANGUAGE plpgsql;
 
+
+SELECT * FROM lab4_ex11();
 
 --- 12 ------------------------------------------
 -- Определяет ФИО риэлторов, продавших квартиры в
