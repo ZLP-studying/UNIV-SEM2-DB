@@ -1,7 +1,10 @@
 --- 1 ----------------------------------------------------------
 -- Конвертирует стоимость объекта недвижимости в евро и долларах
 ----------------------------------------------------------------
-CREATE OR REPLACE FUNCTION lab4_ex1(object_id BIGINT, currency CHAR(3))
+CREATE OR REPLACE FUNCTION lab4_ex1(
+	object_id BIGINT,
+	currency CHAR(3)
+)
 RETURNS DOUBLE PRECISION AS $$
 BEGIN
     IF currency = 'USD' THEN
@@ -10,7 +13,7 @@ BEGIN
         RETURN (SELECT cost / 90 FROM objects WHERE id = object_id);
     END IF;
 END;
-$$ LANGUAGE SQL;
+$$ LANGUAGE PLPGSQL;
 
 SELECT lab4_ex1(1, 'EUR');
 
@@ -22,23 +25,30 @@ SELECT lab4_ex1(1, 'EUR');
 -- S – коэффициент, R – премия
 ----------------------------------------------------------------
 CREATE OR REPLACE FUNCTION lab4_ex2(
-	s double precision,
-	r double precision,
-	start_date date,
-	end_date date,
-	realtor_surname varchar)
-RETURNS double precision
-AS $$
-SELECT 
-(SELECT SUM(sales.cost) FROM sales JOIN realtors ON sales.realtor_id = 
-realtors.id
-WHERE realtors.s_name = realtor_surname AND sales.date BETWEEN start_date AND 
-end_date) * s + r
+    s DOUBLE PRECISION,
+    r DOUBLE PRECISION,
+    start_date DATE,
+    end_date DATE,
+    realtor_surname VARCHAR)
+RETURNS DOUBLE PRECISION AS $$
+DECLARE
+    salary DOUBLE PRECISION;
+BEGIN
+    SELECT SUM(sales.cost) * s + r
+    INTO salary
+    FROM sales
+    JOIN realtors ON sales.realtor_id = realtors.id
+    WHERE realtors.s_name = realtor_surname
+    AND sales.date BETWEEN start_date AND end_date;
+
+    RETURN salary;
+END;
 $$
-LANGUAGE SQL;
+LANGUAGE PLPGSQL;
 
 SELECT *
-FROM lab4_ex2 (0.03,15000,'10.01.2017','10.02.2018','Сафронов');
+FROM
+lab4_ex2 (0.03, 15000, '10.01.2017', '10.02.2018', 'Сафронов');
 
 --- 3 -----------------------------------------------------
 -- Добавить таблицу «Заработная плата риэлтора», содержащая
@@ -46,7 +56,6 @@ FROM lab4_ex2 (0.03,15000,'10.01.2017','10.02.2018','Сафронов');
 -- функции из пункта 2 таким образом, чтобы рассчитанная
 -- заработная плата сохранялась в этой таблице
 -----------------------------------------------------------
----
 CREATE OR REPLACE FUNCTION lab4_ex3(
     s DOUBLE PRECISION,
     r DOUBLE PRECISION,
@@ -72,7 +81,15 @@ BEGIN
     RETURN salary;
 END;
 $$
-LANGUAGE SQL;
+LANGUAGE PLPGSQL;
+
+SELECT *
+FROM
+lab4_ex3 (0.03, 15000, '10.01.2017', '10.02.2018', 'Сафронов');
+SELECT *
+FROM
+lab4_ex3 (0.03, 100000, '10.01.2017', '10.02.2018', 'Сафронов');
+
 --- 4 -------------------------------------------------------
 -- Создать функцию, которая возвращает самые низкую и высокую
 -- зарплаты необходимо месяца и года среди риэлторов
@@ -86,9 +103,10 @@ BEGIN
     FROM realtors_salary
     WHERE realtors_salary.month = r_month AND realtors_salary.year = r_year;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE PLPGSQL;
 
-SELECT * FROM lab4_ex4(1, 2017);
+SELECT *
+FROM lab4_ex4(1, 2017);
 
 --- 5 --------------------------------------------------------------------
 -- Рассчитывает процент изменения продажной стоимости объекта недвижимости
@@ -159,11 +177,7 @@ END;
 $$
 LANGUAGE plpgsql;
 
-
-
 SELECT * FROM lab_4_ex_6(3);
-
-
 
 --- 7 ----------------------------------------------------
 -- Формирует список средних оценок по каждому критерию для
@@ -251,7 +265,7 @@ AS $$(
 $$
 LANGUAGE SQL;
 
-SELECT * FROM lab_4_ex_9(2017, 2020, 2)
+SELECT * FROM lab_4_ex_9(2017, 2020, 2);
 
 --- 10 ------------------------------------------------------
 -- Рассчитывает какой процент составляет площадь каждого типа
@@ -313,7 +327,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
 SELECT * FROM lab4_ex11();
 
 --- 12 ------------------------------------------
@@ -342,7 +355,7 @@ $$
 LANGUAGE SQL;
 
 SELECT *
-FROM lab4_ex12('Митино', 'ы');
+FROM lab4_ex12('Митино', 'Гослинг');
 
 --- 13 ---------------------------------------------
 -- Формирует статистику по продажам за указанный год
@@ -405,7 +418,7 @@ WHERE objects.id = object_id
 $$
 LANGUAGE SQL;
 
-SELECT * FROM lab_4_ex_14(6, 4, 12, 200000)
+SELECT * FROM lab_4_ex_14(6, 4, 12, 200000);
 
 --- 15 ---------------------------------------------------------------
 -- Написать функцию, которая рассчитывает сумму налога на недвижимость
