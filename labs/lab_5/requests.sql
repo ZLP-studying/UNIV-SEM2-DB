@@ -3,13 +3,69 @@
 -- «Объекты недвижимости» на
 -- 0 – при добавлении новой продажи и на 1 – при удалении записи о продаже
 --------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION lab_5_ex1()
+RETURNS TRIGGER AS $$
+BEGIN
+IF TG_OP = 'INSERT' THEN
+	UPDATE objects
+	SET status = false
+	WHERE id = NEW.object_id;
+ELSIF TG_OP = 'DELETE' THEN
+	UPDATE objects
+	SET status = true
+	WHERE id = OLD.object_id;
+END IF;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE TRIGGER lab_5_ex1
+AFTER INSERT OR DELETE
+ON sales
+FOR EACH ROW
+EXECUTE FUNCTION lab_5_ex1();
+
+INSERT INTO sales
+(object_id, date, realtor_id, cost) VALUES
+(4, '2019-10-10', 3, 19822000);
+SELECT id, status FROM objects WHERE id = 4;
+
+DELETE FROM sales WHERE object_id = 4;
+SELECT id, status FROM objects WHERE id = 4;
 
 --- 2 ---------------------------------------------------------------------
 -- Создать триггер, который будет выводить сообщение при разнице заявленной
 -- и продажной стоимости объекта недвижимости более чем на 20%
 ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION lab_5_ex2()
+RETURNS TRIGGER AS $$
+DECLARE obj_cost real;
+BEGIN
+obj_cost = (SELECT cost FROM objects WHERE id = NEW.object_id);
+IF (NEW.cost / obj_cost) < 0.8 OR (NEW.cost / obj_cost) > 1.2 THEN
+	RAISE NOTICE 'The declared and sale prices differ by more than 20 perc';
+END IF;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE TRIGGER lab_5_ex2
+BEFORE UPDATE OR INSERT
+ON sales
+FOR EACH ROW
+EXECUTE FUNCTION lab_5_ex2();
+
+
+INSERT INTO sales
+(object_id, date, realtor_id, cost) VALUES
+(4, '2019-10-10', 3, 33668000);
+
+SELECT objects.cost, sales.cost
+FROM objects, sales
+WHERE
+sales.object_id = objects.id
+AND
+objects.id = 4;
 
 --- 3 ------------------------------------------------------------------------
 -- Создать триггер, который при добавлении новой продажи будет осуществлять
