@@ -206,3 +206,21 @@ EXECUTE FUNCTION lab_6_ex6();
 -- только букв, первая буква прописная). При несоответствии, 
 -- выводить сообщение.
 ----------------------------------------------------------------
+CREATE OR REPLACE FUNCTION lab_6_ex7()
+RETURNS TRIGGER AS $$
+DECLARE
+    lo_fullname TEXT;
+BEGIN
+    lo_fullname := CONCAT_WS(' ', NEW.last_name, NEW.first_name, NEW.middle_name);
+    IF NOT (lo_fullname ~ '^[А-ЯЁ][а-яё]+ [А-ЯЁ][а-яё]+ [А-ЯЁ][а-яё]+$') THEN
+        RAISE EXCEPTION 'ERROR! Invalid fullname input.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER lab_6_ex7
+BEFORE INSERT
+ON realtors
+FOR EACH ROW
+EXECUTE FUNCTION lab_6_ex7();
