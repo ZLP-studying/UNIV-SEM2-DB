@@ -194,11 +194,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER sales_log_trigger
+CREATE OR REPLACE TRIGGER sales_log_trigger
 AFTER INSERT OR UPDATE OR DELETE
 ON sales
 FOR EACH ROW
 EXECUTE FUNCTION lab_6_ex6();
+
+INSERT INTO sales
+(object_id) VALUES
+(2);
+
+SELECT * FROM sales_log;
 
 -- 7 -----------------------------------------------------------
 -- Создать триггер, который при добавлении нового риэлтора будет 
@@ -211,7 +217,7 @@ RETURNS TRIGGER AS $$
 DECLARE
     lo_fullname TEXT;
 BEGIN
-    lo_fullname := CONCAT_WS(' ', NEW.last_name, NEW.first_name, NEW.middle_name);
+    lo_fullname := CONCAT_WS(' ', NEW.s_name, NEW.f_name, NEW.t_name);
     IF NOT (lo_fullname ~ '^[А-ЯЁ][а-яё]+ [А-ЯЁ][а-яё]+ [А-ЯЁ][а-яё]+$') THEN
         RAISE EXCEPTION 'ERROR! Invalid fullname input.';
     END IF;
@@ -219,8 +225,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER lab_6_ex7
+CREATE OR REPLACE TRIGGER lab_6_ex7
 BEFORE INSERT
 ON realtors
 FOR EACH ROW
 EXECUTE FUNCTION lab_6_ex7();
+
+INSERT INTO realtors
+(s_name, f_name, t_name) VALUES
+('Nikitin', 'Oleg', 'Evgenievich');
+
+INSERT INTO realtors
+(s_name, f_name, t_name) VALUES
+('Никитин', 'Олег', 'Евгеньевич');
