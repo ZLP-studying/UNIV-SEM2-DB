@@ -128,4 +128,64 @@ SELECT * FROM price_history;
 -- текстовом формате. Пример, 1650000 –> один миллион шестьсот
 -- пятьдесят тысяч руб.
 ---------------------------------------------------------------
+CREATE OR REPLACE FUNCTION lab_7_ex_4(cost NUMERIC) 
+RETURNS TEXT 
+AS $$
+DECLARE
+   units CONSTANT TEXT[] := ARRAY['', 'один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'];
+   tens_units CONSTANT TEXT[] := ARRAY['', 'одиннадцать', 'двенадцать', 'тринадцать', 'четырнадцать', 'пятнадцать', 'шестнадцать', 'семнадцать', 'восемнадцать', 'девятнадцать'];
+   tens CONSTANT TEXT[] := ARRAY['', 'десять', 'двадцать', 'тридцать', 'сорок', 'пятьдесят', 'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто'];
+   hundreds CONSTANT TEXT[] := ARRAY['', 'сто', 'двести', 'триста', 'четыреста', 'пятьсот', 'шестьсот', 'семьсот', 'восемьсот', 'девятьсот'];
+   thousands_millions CONSTANT TEXT[] := ARRAY['', 'тысяч', 'миллион', 'миллиард', 'триллион', 'квадриллион', 'квинтиллион', 'секстиллион', 'септиллион', 'октиллион'];
+   forms CONSTANT TEXT[][] := ARRAY[
+      ARRAY['', '', ''],
+      ARRAY['', 'а', 'ов'],
+      ARRAY['', 'н', 'на'],
+      ARRAY['', 'н', 'на']
+   ];
+   
+   FUNCTION get_form(index INT, number INT) RETURNS TEXT AS $$
+   BEGIN
+      IF (number % 100 >= 11 AND number % 100 <= 19) THEN
+         RETURN forms[index][3];
+      ELSE
+         RETURN forms[index][number % 10];
+      END IF;
+   END;
+   
+   FUNCTION convert_number(number INT, form_index INT) RETURNS TEXT AS $$
+   DECLARE
+      result TEXT := '';
+   BEGIN
+      IF (number >= 100) THEN
+         result := result || hundreds[number / 100] || ' ';
+         number := number % 100;
+      END IF;
+      
+      IF (number >= 20) THEN
+         result := result || tens[number / 10] || ' ';
+         number := number % 10;
+      ELSIF (number >= 11) THEN
+         result := result || tens_units[number % 10] || ' ';
+         number := 0;
+      END IF;
+      
+      IF (number > 0) THEN
+         result := result || units[number] || ' ';
+      END IF;
+      
+      result := result || get_form(form_index, number);
+      RETURN result;
+   END;
+   
+   FUNCTION convert_group(number INT, form_index INT) RETURNS TEXT AS $$
+   BEGIN
+      IF (number = 0) THEN
+         RETURN '';
+      ELSE
+         RETURN convert_number(number, form_index) || ' ';
+      END IF;
+   END;
+   
+   FUNCTION convert_to_text
 
