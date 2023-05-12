@@ -128,64 +128,96 @@ SELECT * FROM price_history;
 -- текстовом формате. Пример, 1650000 –> один миллион шестьсот
 -- пятьдесят тысяч руб.
 ---------------------------------------------------------------
-CREATE OR REPLACE FUNCTION lab_7_ex_4(cost NUMERIC) 
+
+CREATE OR REPLACE FUNCTION lab_7_ex_4_convert_number(num INTEGER)
 RETURNS TEXT 
 AS $$
 DECLARE
-   units CONSTANT TEXT[] := ARRAY['', 'один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'];
-   tens_units CONSTANT TEXT[] := ARRAY['', 'одиннадцать', 'двенадцать', 'тринадцать', 'четырнадцать', 'пятнадцать', 'шестнадцать', 'семнадцать', 'восемнадцать', 'девятнадцать'];
-   tens CONSTANT TEXT[] := ARRAY['', 'десять', 'двадцать', 'тридцать', 'сорок', 'пятьдесят', 'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто'];
-   hundreds CONSTANT TEXT[] := ARRAY['', 'сто', 'двести', 'триста', 'четыреста', 'пятьсот', 'шестьсот', 'семьсот', 'восемьсот', 'девятьсот'];
-   thousands_millions CONSTANT TEXT[] := ARRAY['', 'тысяч', 'миллион', 'миллиард', 'триллион', 'квадриллион', 'квинтиллион', 'секстиллион', 'септиллион', 'октиллион'];
-   forms CONSTANT TEXT[][] := ARRAY[
-      ARRAY['', '', ''],
-      ARRAY['', 'а', 'ов'],
-      ARRAY['', 'н', 'на'],
-      ARRAY['', 'н', 'на']
-   ];
-   
-   FUNCTION get_form(index INT, number INT) RETURNS TEXT AS $$
-   BEGIN
-      IF (number % 100 >= 11 AND number % 100 <= 19) THEN
-         RETURN forms[index][3];
-      ELSE
-         RETURN forms[index][number % 10];
-      END IF;
-   END;
-   
-   FUNCTION convert_number(number INT, form_index INT) RETURNS TEXT AS $$
-   DECLARE
-      result TEXT := '';
-   BEGIN
-      IF (number >= 100) THEN
-         result := result || hundreds[number / 100] || ' ';
-         number := number % 100;
-      END IF;
-      
-      IF (number >= 20) THEN
-         result := result || tens[number / 10] || ' ';
-         number := number % 10;
-      ELSIF (number >= 11) THEN
-         result := result || tens_units[number % 10] || ' ';
-         number := 0;
-      END IF;
-      
-      IF (number > 0) THEN
-         result := result || units[number] || ' ';
-      END IF;
-      
-      result := result || get_form(form_index, number);
-      RETURN result;
-   END;
-   
-   FUNCTION convert_group(number INT, form_index INT) RETURNS TEXT AS $$
-   BEGIN
-      IF (number = 0) THEN
-         RETURN '';
-      ELSE
-         RETURN convert_number(number, form_index) || ' ';
-      END IF;
-   END;
-   
-   FUNCTION convert_to_text
+	units    CONSTANT TEXT[] := ARRAY['', 'один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'];
+	tens     CONSTANT TEXT[] := ARRAY['', 'десять', 'двадцать', 'тридцать', 'сорок', 'пятьдесят', 'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто'];
+	teens    CONSTANT TEXT[] := ARRAY['десять', 'одиннадцать', 'двенадцать', 'тринадцать', 'четырнадцать', 'пятнадцать', 'шестнадцать', 'семнадцать', 'восемнадцать', 'девятнадцать'];
+	hundreds CONSTANT TEXT[] := ARRAY['', 'сто', 'двести', 'триста', 'четыреста', 'пятьсот', 'шестьсот', 'семьсот', 'восемьсот', 'девятьсот'];
+	num_text TEXT;
+	temp INTEGER;
+	ending TEXT;
+BEGIN
+	num_text := '';
 
+	IF num >= 1000000 THEN
+		temp := num / 1000000;
+		num_text := num_text || lab_7_ex_4_convert_number(temp) || ' миллион';
+		IF temp % 10 >= 5 OR ( temp % 100 >= 11 AND temp % 100 < 20) OR temp % 10 = 0 THEN
+			ending := 'ов ';
+		ELSIF temp % 10 >= 2 AND temp % 10 <= 4 AND (temp % 100 < 10 OR temp % 100 >= 20) THEN
+			ending := 'а ';
+		ELSE
+			ending := '';
+		END IF;
+		num_text := num_text || ending;
+		num := num % 1000000;
+	END IF;
+
+	IF num >= 1000 THEN
+		temp := num / 1000;
+		IF temp % 10 >= 2 AND temp % 10 <= 4 THEN
+			num_text := num_text || lab_7_ex_4_convert_number(temp) || ' тысячи ';
+		ELSIF temp % 10 >= 5 or temp % 10 = 0 THEN
+			num_text := num_text || lab_7_ex_4_convert_number(temp) || ' тысяч ';
+		ELSE
+			num_text := num_text || lab_7_ex_4_convert_number(temp) || 'тысяча ';
+		END IF;
+		num := num - temp * 1000;
+	END IF;
+
+		IF num >= 100 THEN
+			temp := num / 100;
+			num_text := num_text || hundreds[temp + 1] || ' ';
+			num := num % 100;
+		END IF;
+
+		IF num >= 20 THEN
+			temp := num / 10;
+			num_text := num_text || tens[temp + 1] || ' ';
+			num := num % 10;
+		END IF;
+
+		IF num >= 10 THEN
+			num_text := num_text || teens[num - 9] || ' ';
+			num := 0;
+		END IF;
+
+		IF num > 0 THEN
+			num_text := num_text || units[num + 1] || ' ';
+		END IF;
+	RETURN num_text;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION lab_7_ex_4_rub(num INTEGER)
+RETURNS TEXT
+AS $$ 
+	DECLARE 
+		output TEXT;
+	BEGIN
+		
+		output := CASE
+			WHEN num % 10 = 1 AND num <> 11 THEN 'рубль'
+			WHEN num % 10 IN (2, 3, 4) AND num NOT BETWEEN 12 AND 14 THEN 'рубля'
+			ELSE 'рублей'
+			END;
+		RETURN output;
+	END; 
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION lab_7_ex_4(num INTEGER)
+RETURNS TEXT
+AS $$ 
+	DECLARE 
+		output TEXT;
+	BEGIN
+		output = lab_7_ex_4_convert_number(num) || ' ' || lab_7_ex_4_rub(num);
+		RETURN TRIM(output);
+	END; 
+$$ LANGUAGE plpgsql;
+
+select lab_7_ex_4(110000)
