@@ -159,9 +159,9 @@ BEGIN
 	IF num >= 1000 THEN
 		temp := num / 1000;
 		IF temp % 10 >= 2 AND temp % 10 <= 4 THEN
-			num_text := num_text || lab_7_ex_4_convert_number(temp) || ' тысячи ';
+			num_text := num_text || lab_7_ex_4_convert_number(temp) || 'тысячи ';
 		ELSIF temp % 10 >= 5 or temp % 10 = 0 THEN
-			num_text := num_text || lab_7_ex_4_convert_number(temp) || ' тысяч ';
+			num_text := num_text || lab_7_ex_4_convert_number(temp) || 'тысяч ';
 		ELSE
 			num_text := num_text || lab_7_ex_4_convert_number(temp) || 'тысяча ';
 		END IF;
@@ -214,9 +214,9 @@ AS $$
 	DECLARE 
 		output TEXT;
 	BEGIN
-		output = lab_7_ex_4_convert_number(num) || ' ' || lab_7_ex_4_rub(num);
+		output = lab_7_ex_4_convert_number(num) || lab_7_ex_4_rub(num);
 		RETURN TRIM(output);
 	END; 
 $$ LANGUAGE plpgsql;
 
-SELECT lab_7_ex_4(110000);
+SELECT lab_7_ex_4(567812);
