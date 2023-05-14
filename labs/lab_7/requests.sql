@@ -128,7 +128,6 @@ SELECT * FROM price_history;
 -- текстовом формате. Пример, 1650000 –> один миллион шестьсот
 -- пятьдесят тысяч руб.
 ---------------------------------------------------------------
-
 CREATE OR REPLACE FUNCTION lab_7_ex_4_convert_number(num INTEGER)
 RETURNS TEXT 
 AS $$
@@ -220,4 +219,4 @@ AS $$
 	END; 
 $$ LANGUAGE plpgsql;
 
-select lab_7_ex_4(110000)
+SELECT lab_7_ex_4(110000);
