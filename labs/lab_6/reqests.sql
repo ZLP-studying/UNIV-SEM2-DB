@@ -124,21 +124,15 @@ INSERT INTO rates
 -- данный объект имеет оценку ниже Х.
 ----------------------------------------------------------------
 CREATE OR REPLACE FUNCTION lab_6_ex_5()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+AS $$
 DECLARE
-lo_parameter_id INTEGER;
-lo_rate FLOAT;
+lo_rate INTEGER;
 BEGIN
-	FOR lo_parameter_id IN SELECT DISTINCT parameter_id FROM rates WHERE object_id = NEW.object_id LOOP
-		SELECT rate INTO lo_rate
-		FROM rates
-		WHERE
-		object_id = NEW.object_id
-		AND parameter_id = lo_parameter_id;
-		IF lo_rate < 5 THEN
-			RAISE EXCEPTION 'ERROR! Object rate is below 5 on parameter %.', lo_parameter_id;
-		END IF;
-	END LOOP;
+	lo_rate = 2;
+	IF NEW.object_id IN (SELECT object_id FROM rates WHERE lo_rate > rate) THEN
+		RAISE EXCEPTION 'Object has rate low then 2'; 
+	END IF;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -149,18 +143,12 @@ ON sales
 FOR EACH ROW
 EXECUTE FUNCTION lab_6_ex_5();
 
-SELECT DISTINCT
-objects.id, rates.parameter_id, rates.rate
-FROM sales, rates, objects
-WHERE
-objects.id = 2
-AND sales.object_id = objects.id
-AND rates.object_id = objects.id
-ORDER BY objects.id, rates.parameter_id;
+select * from rates where object_id = 11;
 
 INSERT INTO sales
-(object_id) VALUES
-(2);
+(object_id, date, realtor_id, cost) VALUES
+(11, '2022-01-01', 4, 20000000);
+	
 
 -- 6 -----------------------------------------------------------
 -- Создать таблицу, которая следующие сведения: дата, время, 
