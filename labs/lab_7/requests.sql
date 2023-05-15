@@ -200,8 +200,8 @@ AS $$
 	BEGIN
 		
 		output := CASE
-			WHEN num % 10 = 1 AND num <> 11 THEN 'рубль'
-			WHEN num % 10 IN (2, 3, 4) AND num NOT BETWEEN 12 AND 14 THEN 'рубля'
+			WHEN num % 10 = 1 AND num % 100 <> 11 THEN 'рубль'
+			WHEN num % 10 IN (2, 3, 4) AND num % 100 NOT BETWEEN 12 AND 14 THEN 'рубля'
 			ELSE 'рублей'
 			END;
 		RETURN output;
