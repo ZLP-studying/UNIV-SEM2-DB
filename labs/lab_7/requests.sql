@@ -144,7 +144,7 @@ BEGIN
 
 	IF num >= 1000000 THEN
 		temp := num / 1000000;
-		num_text := num_text || lab_7_ex_4_convert_number(temp) || ' миллион';
+		num_text := num_text || lab_7_ex_4_convert_number(temp) || ' миллион ';
 		IF temp % 10 >= 5 OR ( temp % 100 >= 11 AND temp % 100 < 20) OR temp % 10 = 0 THEN
 			ending := 'ов ';
 		ELSIF temp % 10 >= 2 AND temp % 10 <= 4 AND (temp % 100 < 10 OR temp % 100 >= 20) THEN
@@ -219,4 +219,4 @@ AS $$
 	END; 
 $$ LANGUAGE plpgsql;
 
-SELECT lab_7_ex_4(567812);
+SELECT lab_7_ex_4(1745641);
