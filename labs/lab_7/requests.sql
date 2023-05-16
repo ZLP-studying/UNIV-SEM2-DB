@@ -112,16 +112,47 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER lab_7_ex_3
+CREATE OR REPLACE TRIGGER lab_7_ex_3
 AFTER INSERT OR UPDATE ON objects
 FOR EACH ROW
 EXECUTE FUNCTION lab_7_ex_3();
 
-INSERT INTO objects
-(district_id, address, floor, rooms, type_id, status, cost, description, material_id, square, date) VALUES
-(1, 'ул. Пушкина, д.10', 5, 3, 1, true, 200000, 'Просторная квартира в центре города', 2, 100, '2022-01-01');
+CREATE OR REPLACE FUNCTION lab_7_ex_3_output(property_id INT)
+RETURNS TABLE (
+    date_changed TIMESTAMP,
+    new_price NUMERIC,
+    diff_price NUMERIC,
+    diff_percent NUMERIC,
+    warning TEXT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+	RETURN QUERY
+    SELECT
+        ph.date_changed,
+        ph.new_price,
+        ROUND((ph.new_price - o.cost/o.square)::NUMERIC, 2),
+        ROUND(((ph.new_price - o.cost/o.square) / (o.cost/o.square) * 100)::NUMERIC, 2),
+        CASE
+            WHEN ph.new_price > o.cost/o.square
+                THEN 'Увеличение цены'
+            WHEN ph.new_price < o.cost/o.square
+                THEN 'Уменьшение цены'
+            ELSE 'Цена не изменилась'
+        END
+    FROM
+        price_history ph,
+        objects o
+    WHERE
+        ph.object_id = property_id AND
+        o.id = property_id;
+END;
+$$;
 
-SELECT * FROM price_history;
+UPDATE objects SET cost = cost * 1.2 WHERE id = 1;
+
+SELECT * FROM lab_7_ex_3_output(1);
 
 --- 4 ---------------------------------------------------------
 -- Написать функцию, которая возвращает стоимость продажи в
