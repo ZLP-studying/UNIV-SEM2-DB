@@ -176,3 +176,217 @@ END;
 $$ LANGUAGE plpgsql;
 
 select detect_bad_worker('2019-01-01');
+
+--salary_counter----------------------------------------------------------------------------
+
+ALTER TABLE realtors
+ADD COLUMN base_salary money DEFAULT (0);
+
+DELETE FROM weekdays *;
+
+UPDATE realtors SET base_salary = 10000 WHERE id = 1;
+UPDATE realtors SET base_salary = 10000 WHERE id = 2;
+UPDATE realtors SET base_salary = 10000 WHERE id = 3;
+UPDATE realtors SET base_salary = 10000 WHERE id = 4;
+UPDATE realtors SET base_salary = 10000 WHERE id = 5;
+
+UPDATE realtors SET late_arrivals = '00:00:00' WHERE id = 1;
+UPDATE realtors SET late_arrivals = '00:00:00' WHERE id = 2;
+UPDATE realtors SET late_arrivals = '00:00:00' WHERE id = 3;
+UPDATE realtors SET late_arrivals = '00:00:00' WHERE id = 4;
+UPDATE realtors SET late_arrivals = '00:00:00' WHERE id = 5;
+
+UPDATE realtors SET overtime = '00:00:00' WHERE id = 1;
+UPDATE realtors SET overtime = '00:00:00' WHERE id = 2;
+UPDATE realtors SET overtime = '00:00:00' WHERE id = 3;
+UPDATE realtors SET overtime = '00:00:00' WHERE id = 4;
+UPDATE realtors SET overtime = '00:00:00' WHERE id = 5;
+
+SELECT * FROM realtors;
+
+CREATE OR REPLACE FUNCTION salary(month_num integer)
+RETURNS TABLE(id integer, salary_total money)
+AS $$
+DECLARE
+salary_total money := 0;
+pa float;
+pb float;
+pc money;
+pd money;
+pe float;
+realtor_temp integer;
+rang_counter int := 0;
+salary_temp money;
+BEGIN
+	FOR realtor_temp IN (SELECT realtors.id FROM realtors ORDER BY base_salary DESC)
+	LOOP
+		rang_counter := rang_counter + 1;
+		--A-----------------------------------------------------------------------------------------
+		IF (SELECT late_arrivals FROM realtors WHERE realtors.id = realtor_temp) > '01:00:00' THEN
+			pa := 1 - 0.2 * FLOOR(EXTRACT(EPOCH FROM (select late_arrivals from realtors where realtors.id = realtor_temp)/600));
+		ELSIF (SELECT late_arrivals FROM realtors WHERE realtors.id = realtor_temp) = '00:00:00' THEN
+			pa := 1;
+		ELSE
+			pa := 1 - 0.05 * FLOOR(EXTRACT(EPOCH FROM realtors.late_arrivals)/600);
+		END IF;
+		
+		--B-----------------------------------------------------------------------------------------
+		IF (SELECT late_arrivals FROM realtors WHERE realtors.id = realtor_temp) = '00:00:00' THEN
+			pb := 1 + 0.1*FLOOR(EXTRACT(EPOCH FROM (SELECT overtime FROM realtors WHERE realtors.id = realtor_temp))/3600);
+		ELSE
+			pb := 1;
+		END IF;
+		
+		--C-----------------------------------------------------------------------------------------
+		IF (SELECT base_salary FROM realtors WHERE realtors.id = realtor_temp) < CAST((SELECT AVG(CAST(base_salary as NUMERIC)) FROM realtors) AS MONEY) THEN
+			pc := 500;
+		ELSE 
+			pc := 200;
+		END IF;
+		
+		--D-----------------------------------------------------------------------------------------
+		IF (SELECT SUM(overtime) FROM REALTORS) = '00:00:00' THEN
+			pd := 300;
+		ELSE
+			pd := 0;
+		END IF;
+		
+		--E-----------------------------------------------------------------------------------------
+		IF rang_counter % 2 = 1 and month_num % 2 = 1 THEN 
+			pe := 0.25;
+		ELSIF rang_counter % 2 = 0 and month_num % 2 = 0 THEN
+			pe := 0.25;
+		END IF;
+		
+		salary_temp = (SELECT base_salary FROM realtors WHERE realtors.id = realtor_temp);
+		salary_total = salary_temp + salary_temp * pa * pb + pc + pd + salary_temp*pe;
+		
+		RETURN QUERY SELECT realtor_temp, salary_total;		
+	END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+INSERT INTO weekdays
+(realtor_id,action_time,action_type)
+VALUES
+-- Day 1
+(1, TIMESTAMP '2023-05-01 09:00:00', 1),
+(1, TIMESTAMP '2023-05-01 13:00:00', 2),
+(1, TIMESTAMP '2023-05-01 14:00:00', 1),
+(1, TIMESTAMP '2023-05-01 18:00:00', 2),
+-- Day 2
+(1, TIMESTAMP '2023-05-02 09:00:00', 1),
+(1, TIMESTAMP '2023-05-02 13:00:00', 2),
+(1, TIMESTAMP '2023-05-02 14:00:00', 1),
+(1, TIMESTAMP '2023-05-02 18:00:00', 2),
+-- Day 3
+(1, TIMESTAMP '2023-05-03 09:00:00', 1),
+(1, TIMESTAMP '2023-05-03 13:00:00', 2),
+(1, TIMESTAMP '2023-05-03 14:00:00', 1),
+(1, TIMESTAMP '2023-05-03 18:00:00', 2),
+-- Day 4
+(1, TIMESTAMP '2023-05-04 09:00:00', 1),
+(1, TIMESTAMP '2023-05-04 13:00:00', 2),
+(1, TIMESTAMP '2023-05-04 14:00:00', 1),
+(1, TIMESTAMP '2023-05-04 18:00:00', 2),
+-- Day 5
+(1, TIMESTAMP '2023-05-05 09:00:00', 1),
+(1, TIMESTAMP '2023-05-05 13:00:00', 2),
+(1, TIMESTAMP '2023-05-05 14:00:00', 1),
+(1, TIMESTAMP '2023-05-05 18:00:00', 2),
+-- Day 8
+(1, TIMESTAMP '2023-05-08 09:00:00', 1),
+(1, TIMESTAMP '2023-05-08 13:00:00', 2),
+(1, TIMESTAMP '2023-05-08 14:00:00', 1),
+(1, TIMESTAMP '2023-05-08 18:00:00', 2),
+-- Day 9
+(1, TIMESTAMP '2023-05-09 09:00:00', 1),
+(1, TIMESTAMP '2023-05-09 13:00:00', 2),
+(1, TIMESTAMP '2023-05-09 14:00:00', 1),
+(1, TIMESTAMP '2023-05-09 18:00:00', 2),
+-- Day 10
+(1, TIMESTAMP '2023-05-10 09:00:00', 1),
+(1, TIMESTAMP '2023-05-10 13:00:00', 2),
+(1, TIMESTAMP '2023-05-10 14:00:00', 1),
+(1, TIMESTAMP '2023-05-10 18:00:00', 2),
+-- Day 11
+(1, TIMESTAMP '2023-05-11 09:00:00', 1),
+(1, TIMESTAMP '2023-05-11 13:00:00', 2),
+(1, TIMESTAMP '2023-05-11 14:00:00', 1),
+(1, TIMESTAMP '2023-05-11 18:00:00', 2),
+-- Day 12
+(1, TIMESTAMP '2023-05-12 09:00:00', 1),
+(1, TIMESTAMP '2023-05-12 13:00:00', 2),
+(1, TIMESTAMP '2023-05-12 14:00:00', 1),
+(1, TIMESTAMP '2023-05-12 18:00:00', 2),
+-- Day 15
+(1, TIMESTAMP '2023-05-15 09:00:00', 1),
+(1, TIMESTAMP '2023-05-15 13:00:00', 2),
+(1, TIMESTAMP '2023-05-15 14:00:00', 1),
+(1, TIMESTAMP '2023-05-15 18:00:00', 2),
+-- Day 16
+(1, TIMESTAMP '2023-05-16 09:00:00', 1),
+(1, TIMESTAMP '2023-05-16 13:00:00', 2),
+(1, TIMESTAMP '2023-05-16 14:00:00', 1),
+(1, TIMESTAMP '2023-05-16 18:00:00', 2),
+-- Day 17
+(1, TIMESTAMP '2023-05-17 09:00:00', 1),
+(1, TIMESTAMP '2023-05-17 13:00:00', 2),
+(1, TIMESTAMP '2023-05-17 14:00:00', 1),
+(1, TIMESTAMP '2023-05-17 18:00:00', 2),
+-- Day 18
+(1, TIMESTAMP '2023-05-18 09:00:00', 1),
+(1, TIMESTAMP '2023-05-18 13:00:00', 2),
+(1, TIMESTAMP '2023-05-18 14:00:00', 1),
+(1, TIMESTAMP '2023-05-18 18:00:00', 2),
+-- Day 19
+(1, TIMESTAMP '2023-05-19 09:00:00', 1),
+(1, TIMESTAMP '2023-05-19 13:00:00', 2),
+(1, TIMESTAMP '2023-05-19 14:00:00', 1),
+(1, TIMESTAMP '2023-05-19 18:00:00', 2),
+-- Day 22
+(1, TIMESTAMP '2023-05-22 09:00:00', 1),
+(1, TIMESTAMP '2023-05-22 13:00:00', 2),
+(1, TIMESTAMP '2023-05-22 14:00:00', 1),
+(1, TIMESTAMP '2023-05-22 18:00:00', 2),
+-- Day 23
+(1, TIMESTAMP '2023-05-23 09:00:00', 1),
+(1, TIMESTAMP '2023-05-23 13:00:00', 2),
+(1, TIMESTAMP '2023-05-23 14:00:00', 1),
+(1, TIMESTAMP '2023-05-23 18:00:00', 2),
+-- Day 24
+(1, TIMESTAMP '2023-05-24 09:00:00', 1),
+(1, TIMESTAMP '2023-05-24 13:00:00', 2),
+(1, TIMESTAMP '2023-05-24 14:00:00', 1),
+(1, TIMESTAMP '2023-05-24 18:00:00', 2),
+-- Day 25
+(1, TIMESTAMP '2023-05-25 09:00:00', 1),
+(1, TIMESTAMP '2023-05-25 13:00:00', 2),
+(1, TIMESTAMP '2023-05-25 14:00:00', 1),
+(1, TIMESTAMP '2023-05-25 18:00:00', 2),
+-- Day 26
+(1, TIMESTAMP '2023-05-26 09:00:00', 1),
+(1, TIMESTAMP '2023-05-26 13:00:00', 2),
+(1, TIMESTAMP '2023-05-26 14:00:00', 1),
+(1, TIMESTAMP '2023-05-26 18:00:00', 2),
+-- Day 29
+(1, TIMESTAMP '2023-05-29 09:00:00', 1),
+(1, TIMESTAMP '2023-05-29 13:00:00', 2),
+(1, TIMESTAMP '2023-05-29 14:00:00', 1),
+(1, TIMESTAMP '2023-05-29 18:00:00', 2),
+-- Day 30
+(1, TIMESTAMP '2023-05-30 09:00:00', 1),
+(1, TIMESTAMP '2023-05-30 13:00:00', 2),
+(1, TIMESTAMP '2023-05-30 14:00:00', 1),
+(1, TIMESTAMP '2023-05-30 18:00:00', 2),
+-- Day 31
+(1, TIMESTAMP '2023-05-31 09:00:00', 1),
+(1, TIMESTAMP '2023-05-31 13:00:00', 2),
+(1, TIMESTAMP '2023-05-31 14:00:00', 1),
+(1, TIMESTAMP '2023-05-31 18:00:00', 2);
+
+select * from realtors;
+select * from salary(5);
+
