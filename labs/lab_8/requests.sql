@@ -256,6 +256,8 @@ BEGIN
 			pe := 0.25;
 		ELSIF rang_counter % 2 = 0 and month_num % 2 = 0 THEN
 			pe := 0.25;
+		ELSE
+			pe := 0;
 		END IF;
 		
 		salary_temp = (SELECT base_salary FROM realtors WHERE realtors.id = realtor_temp);
