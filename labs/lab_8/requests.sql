@@ -1,11 +1,9 @@
 --ex1-------------------------------------------------------
-
 ALTER TABLE realtors
 ADD COLUMN late_arrivals 	interval DEFAULT (interal '0'),
 ADD COLUMN overtime       interval DEFAULT (interval '0');
 
 --ex2-------------------------------------------------------
-
 DROP TABLE IF EXISTS weekdays CASCADE;
 CREATE TABLE IF NOT EXISTS weekdays(
 	id serial PRIMARY KEY,
@@ -54,11 +52,10 @@ VALUES
 (5,'2023-01-01,16:35:13',1);
 
 --ex2-------------------------------------------------------
-
 CREATE OR REPLACE FUNCTION realtor_work_update()
 RETURNS TRIGGER
 AS $$
-DECLARE 
+DECLARE
     a_time time;
     work_start time := '09:00:00';
     work_end time := '18:00:00';
@@ -66,7 +63,7 @@ DECLARE
     lunch_end time := '14:00:00';
 BEGIN
     a_time := NEW.action_time::time;
-    
+
     IF NEW.action_type = 1 THEN
         IF a_time > work_start AND a_time < lunch_start THEN
             UPDATE realtors SET late_arrivals = (SELECT late_arrivals FROM realtors WHERE id = NEW.realtor_id) + (a_time - work_start) WHERE id = NEW.realtor_id;
@@ -82,9 +79,9 @@ BEGIN
             UPDATE realtors SET overtime = (SELECT overtime FROM realtors WHERE id = NEW.realtor_id) + (a_time - lunch_start) WHERE id = NEW.realtor_id;
         END IF;
     END IF;
-    
+
     RETURN NEW;
-END; 
+END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER realtor_work_update
@@ -160,14 +157,14 @@ realtor_id = 1 - good worker
 CREATE OR REPLACE FUNCTION detect_bad_worker(week_start date)
 RETURNS SETOF bigint
 AS $$
-DECLARE 
+DECLARE
 	realtor_temp bigint;
 BEGIN
 	FOR realtor_temp IN (SELECT id FROM realtors)
 	LOOP
-		IF (SELECT ((SELECT SUM(action_time::TIME) FROM weekdays WHERE realtor_id = realtor_temp AND 
-			ABS(action_time::DATE - week_start) < 7 AND action_type = 2)  - 
-				(SELECT SUM(action_time::TIME) FROM weekdays WHERE realtor_id = realtor_temp AND 
+		IF (SELECT ((SELECT SUM(action_time::TIME) FROM weekdays WHERE realtor_id = realtor_temp AND
+			ABS(action_time::DATE - week_start) < 7 AND action_type = 2)  -
+				(SELECT SUM(action_time::TIME) FROM weekdays WHERE realtor_id = realtor_temp AND
 			ABS(action_time::DATE - week_start) < 7 AND action_type = 1))) < '40:00:00' THEN
 			RETURN NEXT realtor_temp;
 		END IF;	
@@ -178,7 +175,6 @@ $$ LANGUAGE plpgsql;
 select detect_bad_worker('2019-01-01');
 
 --salary_counter----------------------------------------------------------------------------
-
 ALTER TABLE realtors
 ADD COLUMN base_salary money DEFAULT (0);
 
@@ -256,6 +252,8 @@ BEGIN
 			pe := 0.25;
 		ELSIF rang_counter % 2 = 0 and month_num % 2 = 0 THEN
 			pe := 0.25;
+		ELSE
+			pe := 0;
 		END IF;
 		
 		salary_temp = (SELECT base_salary FROM realtors WHERE realtors.id = realtor_temp);
