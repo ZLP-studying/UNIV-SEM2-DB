@@ -4,8 +4,8 @@
 -- СВЕРХУРОЧНЫЕ (тип данных: interval).
 ------------------------------------------------------------
 ALTER TABLE realtors
-ADD COLUMN late_arrivals 	interval DEFAULT (interal '0'),
-ADD COLUMN overtime       interval DEFAULT (interval '0');
+ADD COLUMN late_arrivals interval DEFAULT (interval '0'),
+ADD COLUMN overtime interval DEFAULT (interval '0');
 
 -- 2 ------------------------------------------------------------------------------------------
 -- Создайте таблицу РАБОЧИЙ ДЕНЬ, в которой будет храниться информация о входе/выходе
@@ -18,7 +18,7 @@ ADD COLUMN overtime       interval DEFAULT (interval '0');
 -- хода должно храниться в виде поля типа DATETIME.
 -----------------------------------------------------------------------------------------------
 DROP TABLE IF EXISTS weekdays CASCADE;
-CREATE TABLE IF NOT EXISTS weekdays(
+CREATE TABLE IF NOT EXISTS weekdays (
 	id serial PRIMARY KEY,
 	realtor_id bigint REFERENCES realtors (id),
 	action_time timestamp,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS weekdays(
 );
 
 INSERT INTO weekdays
-(realtor_id,action_time,action_type)
+(realtor_id, action_time, action_type)
 VALUES
 -- вход --
 (1,'2023-01-01,08:59:33',1),
@@ -95,6 +95,7 @@ VALUES
 -- сотруднику, имеющему четный ранг по окладу на предприятии, для каждого нечетного
 -- месяца – каждому сотруднику с нечетным рангом.
 ------------------------------------------------------------
+-- 1 --
 CREATE OR REPLACE FUNCTION realtor_work_update()
 RETURNS TRIGGER
 AS $$
@@ -135,13 +136,12 @@ EXECUTE FUNCTION realtor_work_update();
 INSERT INTO weekdays
 (realtor_id,action_time,action_type)
 VALUES
-(5,'2023-01-01,21:00:00',2)
+(1,'2023-01-01,9:10:00',1);
 
-select * from weekdays
-select * from realtors
+SELECT * FROM weekdays ORDER BY id DESC;
+SELECT * FROM realtors;
 
--- function_that_finds_bad_worker --
-
+-- 2 --
 INSERT INTO weekdays
 (realtor_id,action_time,action_type)
 VALUES
@@ -215,9 +215,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-select detect_bad_worker('2019-01-01');
+-- Отдельный селект часов работы за неделю
+SELECT (
+	(
+		SELECT SUM(action_time::TIME)
+		FROM weekdays
+		WHERE realtor_id = 1
+		AND ABS(action_time::DATE - '2019-01-01') < 7 AND action_type = 2
+	)  -
+	(
+		SELECT SUM(action_time::TIME)
+		FROM weekdays
+		WHERE realtor_id = 1
+		AND ABS(action_time::DATE - '2019-01-01') < 7 AND action_type = 1
+	)
+);
 
--- salary_counter --
+SELECT detect_bad_worker('2019-01-01');
+
+-- 3 --
 ALTER TABLE realtors
 ADD COLUMN base_salary money DEFAULT (0);
 
@@ -247,20 +263,20 @@ CREATE OR REPLACE FUNCTION salary(month_num integer)
 RETURNS TABLE(id integer, salary_total money)
 AS $$
 DECLARE
-salary_total money := 0;
-pa float;
-pb float;
-pc money;
-pd money;
-pe float;
-realtor_temp integer;
-rang_counter int := 0;
-salary_temp money;
+	salary_total money := 0;
+	pa float;
+	pb float;
+	pc money;
+	pd money;
+	pe float;
+	realtor_temp integer;
+	rang_counter int := 0;
+	salary_temp money;
 BEGIN
 	FOR realtor_temp IN (SELECT realtors.id FROM realtors ORDER BY base_salary DESC)
 	LOOP
 		rang_counter := rang_counter + 1;
-		--A-----------------------------------------------------------------------------------------
+		-- A --
 		IF (SELECT late_arrivals FROM realtors WHERE realtors.id = realtor_temp) > '01:00:00' THEN
 			pa := 1 - 0.2 * FLOOR(EXTRACT(EPOCH FROM (select late_arrivals from realtors where realtors.id = realtor_temp)/600));
 		ELSIF (SELECT late_arrivals FROM realtors WHERE realtors.id = realtor_temp) = '00:00:00' THEN
@@ -269,28 +285,28 @@ BEGIN
 			pa := 1 - 0.05 * FLOOR(EXTRACT(EPOCH FROM realtors.late_arrivals)/600);
 		END IF;
 
-		--B-----------------------------------------------------------------------------------------
+		-- B --
 		IF (SELECT late_arrivals FROM realtors WHERE realtors.id = realtor_temp) = '00:00:00' THEN
 			pb := 1 + 0.1*FLOOR(EXTRACT(EPOCH FROM (SELECT overtime FROM realtors WHERE realtors.id = realtor_temp))/3600);
 		ELSE
 			pb := 1;
 		END IF;
 
-		--C-----------------------------------------------------------------------------------------
+		-- C --
 		IF (SELECT base_salary FROM realtors WHERE realtors.id = realtor_temp) < CAST((SELECT AVG(CAST(base_salary as NUMERIC)) FROM realtors) AS MONEY) THEN
 			pc := 500;
 		ELSE 
 			pc := 200;
 		END IF;
 
-		--D-----------------------------------------------------------------------------------------
+		-- D --
 		IF (SELECT SUM(overtime) FROM REALTORS) = '00:00:00' THEN
 			pd := 300;
 		ELSE
 			pd := 0;
 		END IF;
 
-		--E-----------------------------------------------------------------------------------------
+		-- E --
 		IF rang_counter % 2 = 1 and month_num % 2 = 1 THEN
 			pe := 0.25;
 		ELSIF rang_counter % 2 = 0 and month_num % 2 = 0 THEN
@@ -427,6 +443,6 @@ VALUES
 (1, TIMESTAMP '2023-05-31 14:00:00', 1),
 (1, TIMESTAMP '2023-05-31 18:00:00', 2);
 
-select * from realtors;
-select * from salary(5);
+SELECT * FROM realtors;
+SELECT * FROM salary(1);
 
